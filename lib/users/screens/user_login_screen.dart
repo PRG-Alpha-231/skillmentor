@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:video_player/video_player.dart';
 
 class UserLoginScreen extends StatefulWidget {
   const UserLoginScreen({super.key});
@@ -9,147 +8,233 @@ class UserLoginScreen extends StatefulWidget {
 }
 
 class _UserLoginScreenState extends State<UserLoginScreen> {
-  late VideoPlayerController _controller;
-  late Future<void> _initializeVideoPlayerFuture;
+  late String email, password;
+  String? emailError, passwordError;
 
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.asset('assets/purple_flow.mp4') // Local video file in your assets
-      ..setLooping(true) // Loop the video
-      ..setVolume(0.0); // Set the volume to 0 if you don't want sound
+    email = '';
+    password = '';
+  }
 
-    _initializeVideoPlayerFuture = _controller.initialize().then((_) {
-      setState(() {});
-      _controller.play(); // Play the video once it's initialized
-    }).catchError((error) {
-      // Handle any errors that might occur during video initialization
-      print("Error initializing video: $error");
-      // Optionally, show an error message to the user
+  void resetErrorText() {
+    setState(() {
+      emailError = null;
+      passwordError = null;
     });
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-    _controller.dispose();
+  bool validate() {
+    resetErrorText();
+
+    RegExp emailExp = RegExp(
+        r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?)*$");
+
+    bool isValid = true;
+    if (email.isEmpty || !emailExp.hasMatch(email)) {
+      setState(() {
+        emailError = 'Email is invalid';
+      });
+      isValid = false;
+    }
+
+    if (password.isEmpty) {
+      setState(() {
+        passwordError = 'Please enter a password';
+      });
+      isValid = false;
+    }
+
+    return isValid;
+  }
+
+  void submit() {
+    if (validate()) {
+      // Handle the login logic (e.g., send the credentials to the backend)
+      print('Email: $email, Password: $password');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    double screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.deepPurple,
-        title: Text('Login'),
-      ),
-      body: Stack(
-        children: [
-          // Video Background
-          FutureBuilder<void>(
-            future: _initializeVideoPlayerFuture,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.done) {
-                return Positioned.fill(
-                  child: FittedBox(
-                    fit: BoxFit.cover,
-                    child: SizedBox(
-                      width: _controller.value.size.width,
-                      height: _controller.value.size.height,
-                      child: VideoPlayer(_controller),
-                    ),
-                  ),
-                );
-              } else if (snapshot.hasError) {
-                return Center(child: Text("Failed to load video."));
-              } else {
-                return Center(child: CircularProgressIndicator());
-              }
-            },
-          ),
-          // Content Layer (Login form)
-          SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Email TextField
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white, // Default white background
-                      borderRadius: BorderRadius.circular(30), // Rounded corners
-                      border: Border.all(color: Colors.deepPurple, width: 2), // Purple border color
-                    ),
-                    child: TextField(
-                      decoration: InputDecoration(
-                        labelText: 'Enter Your Email',
-                        labelStyle: TextStyle(color: Colors.deepPurple),
-                        fillColor: Colors.white,
-                        filled: true,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(30),
-                          borderSide: BorderSide(color: Colors.deepPurple, width: 2),
-                        ),
-                        contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-                        prefixIcon: Icon(Icons.email, color: Colors.deepPurple),
-                      ),
-                      style: TextStyle(color: Colors.deepPurple),
-                      keyboardType: TextInputType.emailAddress,
-                    ),
-                  ),
-                  SizedBox(height: 16),
-                  // Password TextField
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(30),
-                      border: Border.all(color: Colors.deepPurple, width: 2),
-                    ),
-                    child: TextField(
-                      obscureText: true,
-                      decoration: InputDecoration(
-                        labelText: 'Enter Your Password',
-                        labelStyle: TextStyle(color: Colors.deepPurple),
-                        fillColor: Colors.white,
-                        filled: true,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(30),
-                          borderSide: BorderSide(color: Colors.deepPurple, width: 2),
-                        ),
-                        contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-                        prefixIcon: Icon(Icons.lock, color: Colors.deepPurple),
-                      ),
-                      style: TextStyle(color: Colors.deepPurple),
-                    ),
-                  ),
-                  SizedBox(height: 24),
-                  // Log In Button
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF800080),
-                      padding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 32.0),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30.0),
-                      ),
-                    ),
-                    onPressed: () {},
-                    child: Text('Log in', style: TextStyle(fontSize: 18)),
-                  ),
-                  // Sign Up Button
-                  TextButton(
-                    onPressed: () {},
-                    child: Text(
-                      'Not registered yet? Sign up',
-                      style: TextStyle(color: Colors.purple),
-                    ),
-                  ),
-                ],
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Column(
+            children: [
+              SizedBox(height: screenHeight * .12),
+              const Text(
+                'Welcome',
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
               ),
-            ),
+              SizedBox(height: screenHeight * .01),
+              Text(
+                'Sign in to continue',
+                style: TextStyle(
+                  fontSize: 18,
+                  color: Colors.black.withOpacity(0.7),
+                ),
+              ),
+              SizedBox(height: screenHeight * .12),
+
+              // Email TextField
+              InputField(
+                labelText: 'Email',
+                errorText: emailError,
+                onChanged: (value) {
+                  setState(() {
+                    email = value;
+                  });
+                },
+                keyboardType: TextInputType.emailAddress,
+                textInputAction: TextInputAction.next,
+                autoFocus: true,
+              ),
+              SizedBox(height: screenHeight * .025),
+
+              // Password TextField
+              InputField(
+                labelText: 'Password',
+                errorText: passwordError,
+                obscureText: true,
+                onChanged: (value) {
+                  setState(() {
+                    password = value;
+                  });
+                },
+                onSubmitted: (val) => submit(),
+                textInputAction: TextInputAction.done,
+              ),
+              SizedBox(height: screenHeight * .03),
+
+              // Forgot Password Button
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () {},
+                  child: const Text(
+                    'Forgot Password?',
+                    style: TextStyle(color: Color.fromARGB(255, 255, 255, 255)),
+                  ),
+                ),
+              ),
+
+              // Login Button
+              FormButton(
+                text: 'Log In',
+                onPressed: submit,
+              ),
+              SizedBox(height: screenHeight * .15),
+
+              // Sign Up Link
+              TextButton(
+                onPressed: () {
+                  // Navigate to register screen
+                },
+                child: RichText(
+                  text: const TextSpan(
+                    text: "Don't have an account? ",
+                    style: TextStyle(color: Colors.black),
+                    children: [
+                      TextSpan(
+                        text: 'Sign Up',
+                        style: TextStyle(
+                          color: Color.fromARGB(255, 3, 6, 148),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
+      ),
+    );
+  }
+}
+
+// Input Field Widget
+class InputField extends StatelessWidget {
+  final String? labelText;
+  final String? errorText;
+  final Function(String)? onChanged;
+  final Function(String)? onSubmitted;
+  final TextInputType? keyboardType;
+  final TextInputAction? textInputAction;
+  final bool autoFocus;
+  final bool obscureText;
+
+  const InputField({
+    this.labelText,
+    this.errorText,
+    this.onChanged,
+    this.onSubmitted,
+    this.keyboardType,
+    this.textInputAction,
+    this.autoFocus = false,
+    this.obscureText = false,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      autofocus: autoFocus,
+      onChanged: onChanged,
+      onSubmitted: onSubmitted,
+      keyboardType: keyboardType,
+      textInputAction: textInputAction,
+      obscureText: obscureText,
+      decoration: InputDecoration(
+        labelText: labelText,
+        errorText: errorText,
+        floatingLabelBehavior: FloatingLabelBehavior.always,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        filled: true,
+        fillColor: Colors.grey[200],
+      ),
+    );
+  }
+}
+
+// Form Button Widget
+class FormButton extends StatelessWidget {
+  final String text;
+  final Function? onPressed;
+
+  const FormButton({this.text = '', this.onPressed, super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    double screenHeight = MediaQuery.of(context).size.height;
+
+    return ElevatedButton(
+      onPressed: onPressed as void Function()?,
+      style: ElevatedButton.styleFrom(
+        padding: EdgeInsets.symmetric(vertical: screenHeight * .02),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        backgroundColor: const Color.fromARGB(255, 3, 6, 148), // Button background color
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontSize: 16,
+          color: Colors.white, // Set text color to white
+        ),
       ),
     );
   }
