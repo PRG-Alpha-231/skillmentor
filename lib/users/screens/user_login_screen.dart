@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:skillmentor/users/screens/user_home.dart';
 import 'package:skillmentor/users/screens/user_registration_screen.dart';
 
 class UserLoginScreen extends StatefulWidget {
@@ -131,7 +132,9 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
               // Login Button
               FormButton(
                 text: 'Log In',
-                onPressed: submit,
+                 onPressed: () {
+                  Navigator.push(context,MaterialPageRoute(builder: (context) =>UserHome() ,)); // Navigate to register screen
+                },
               ),
               SizedBox(height: screenHeight * .15),
 
