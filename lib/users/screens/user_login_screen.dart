@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:skillmentor/users/screens/user_registration_screen.dart';
 
 class UserLoginScreen extends StatefulWidget {
   const UserLoginScreen({super.key});
@@ -137,7 +138,7 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
               // Sign Up Link
               TextButton(
                 onPressed: () {
-                  // Navigate to register screen
+                 Navigator.push(context,MaterialPageRoute(builder: (context) =>UserRegistrationApp() ,)); // Navigate to register screen
                 },
                 child: RichText(
                   text: const TextSpan(
