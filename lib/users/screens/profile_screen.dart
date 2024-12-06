@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:skillmentor/users/screens/resource_screen.dart';
+import 'package:skillmentor/users/screens/user_home.dart';
 
 class ProfileScreen extends StatelessWidget {
   @override
@@ -78,6 +80,33 @@ class ProfileScreen extends StatelessWidget {
             ],
           ),
         ),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: 2,  // Set to ProfileScreen as default
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.school), label: 'Resources'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+        ],
+        onTap: (int index) {
+          switch (index) {
+            case 0:
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => UserHome()),
+              );
+              break;
+            case 1:
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => ResourcesScreen()),
+              );
+              break;
+            case 2:
+            // No need to navigate for the Profile screen, it is already active
+              break;
+          }
+        },
       ),
     );
   }
