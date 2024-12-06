@@ -67,7 +67,7 @@ class ResourcesScreen extends StatelessWidget {
               bgColor: Color(0xFFB2E1FF), // Brighter pastel light blue
               icon: Icons.flash_on, // Flash icon for flashcards
               onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => FlashcardsScreen()));
+                Navigator.push(context, MaterialPageRoute(builder: (context) => FlashCardScreen()));
               },
             ),
             SizedBox(height: 16),

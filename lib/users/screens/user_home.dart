@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:skillmentor/users/screens/resource_screen.dart';
-
 import 'profile_screen.dart';
 
 class UserHome extends StatefulWidget {
@@ -14,7 +13,6 @@ class _UserHomeState extends State<UserHome> {
   final TextEditingController _taskController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
 
-  // Additional task categories for new progress bars
   final List<String> _workTasks = [];
   final List<bool> _workTaskCompletionStatus = [];
 
@@ -100,15 +98,15 @@ class _UserHomeState extends State<UserHome> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 IconButton(
-                  icon: Icon(Icons.arrow_left),
+                  icon: Icon(Icons.arrow_left, color: Colors.blueGrey),
                   onPressed: _goToPreviousWeek,
                 ),
                 Text(
                   '${_selectedDate.month}/${_selectedDate.day}/${_selectedDate.year}',
-                  style: Theme.of(context).textTheme.headlineSmall,
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.blueGrey),
                 ),
                 IconButton(
-                  icon: Icon(Icons.arrow_right),
+                  icon: Icon(Icons.arrow_right, color: Colors.blueGrey),
                   onPressed: _goToNextWeek,
                 ),
               ],
@@ -121,7 +119,7 @@ class _UserHomeState extends State<UserHome> {
             // Original Progress Bar Section (Overall Progress)
             Text(
               'Overall Progress',
-              style: Theme.of(context).textTheme.headlineSmall,
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.blueGrey),
             ),
             const SizedBox(height: 10),
             _toDoList.isEmpty
@@ -140,11 +138,11 @@ class _UserHomeState extends State<UserHome> {
               children: [
                 LinearProgressIndicator(
                   value: _overallCompletionPercentage,
-                  minHeight: 10,
+                  minHeight: 20,
                   backgroundColor: Colors.grey[300],
                   valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
                 ),
-                const SizedBox(height: 5),
+                const SizedBox(height: 10),
                 Text(
                   '${(_overallCompletionPercentage * 100).toStringAsFixed(0)}%',
                   style: TextStyle(
@@ -160,14 +158,13 @@ class _UserHomeState extends State<UserHome> {
 
             // Expansion Tile for Additional Progress Bars
             ExpansionTile(
-              title: Text('Additional Progress Bars'),
+              title: Text('Additional Progress Bars', style: Theme.of(context).textTheme.bodySmall),
               children: [
-                _buildProgressBarSection('Category 1 ', _category1CompletionPercentage, Colors.tealAccent),
-                _buildProgressBarSection('Category 2 ', _category2CompletionPercentage, Colors.tealAccent),
-                _buildProgressBarSection('Category 3 ', _category3CompletionPercentage, Colors.tealAccent),
-                _buildProgressBarSection('Category 4 ', _category4CompletionPercentage, Colors.tealAccent),
-                _buildProgressBarSection('Category 5 ', _category5CompletionPercentage, Colors.tealAccent),
-
+                _buildProgressBarSection('Category 1', _category1CompletionPercentage, Colors.tealAccent),
+                _buildProgressBarSection('Category 2', _category2CompletionPercentage, Colors.tealAccent),
+                _buildProgressBarSection('Category 3', _category3CompletionPercentage, Colors.tealAccent),
+                _buildProgressBarSection('Category 4', _category4CompletionPercentage, Colors.tealAccent),
+                _buildProgressBarSection('Category 5', _category5CompletionPercentage, Colors.tealAccent),
               ],
             ),
 
@@ -176,7 +173,7 @@ class _UserHomeState extends State<UserHome> {
             // To-Do List Section
             Text(
               'To-Do List',
-              style: Theme.of(context).textTheme.headlineSmall,
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.blueGrey),
             ),
             const SizedBox(height: 10),
 
@@ -190,6 +187,8 @@ class _UserHomeState extends State<UserHome> {
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
+                      filled: true,
+                      fillColor: Colors.grey[200],
                     ),
                   ),
                 ),
@@ -197,6 +196,12 @@ class _UserHomeState extends State<UserHome> {
                 ElevatedButton(
                   onPressed: _addTask,
                   child: const Text('Add'),
+                  style: ElevatedButton.styleFrom(
+                     // Background color
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8), // Rounded button
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -248,26 +253,20 @@ class _UserHomeState extends State<UserHome> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: 0,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home',),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.school), label: 'Resources'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
         onTap: (int index) {
           switch (index) {
             case 0:
-          Navigator.push(context,MaterialPageRoute(builder: (context) =>UserHome() ,));
+              Navigator.push(context, MaterialPageRoute(builder: (context) => UserHome()));
               break;
             case 1:
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => ResourcesScreen()),
-              );
+              Navigator.push(context, MaterialPageRoute(builder: (context) => ResourcesScreen()));
               break;
             case 2:
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => ProfileScreen()),
-              );
+              Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileScreen()));
               break;
           }
         },
@@ -382,8 +381,6 @@ class _UserHomeState extends State<UserHome> {
 
 extension DateTimeComparison on DateTime {
   bool isSameDayAs(DateTime other) {
-    return this.year == other.year &&
-        this.month == other.month &&
-        this.day == other.day;
+    return this.year == other.year && this.month == other.month && this.day == other.day;
   }
 }
