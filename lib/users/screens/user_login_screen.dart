@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:skillmentor/users/screens/user_home.dart';
 import 'package:skillmentor/users/screens/user_registration_screen.dart';
+import 'package:skillmentor/users/screens/forgot_password_screen.dart'; // Add ForgotPasswordScreen
 
 class UserLoginScreen extends StatefulWidget {
   const UserLoginScreen({super.key});
@@ -12,6 +13,7 @@ class UserLoginScreen extends StatefulWidget {
 class _UserLoginScreenState extends State<UserLoginScreen> {
   late String email, password;
   String? emailError, passwordError;
+  bool showPassword = false; // Variable to toggle password visibility
 
   @override
   void initState() {
@@ -30,10 +32,12 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
   bool validate() {
     resetErrorText();
 
+    // Email validation
     RegExp emailExp = RegExp(
-        r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?)*$");
-
+        r"^[a-zAZ0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?)*$");
     bool isValid = true;
+
+    // Validate email
     if (email.isEmpty || !emailExp.hasMatch(email)) {
       setState(() {
         emailError = 'Email is invalid';
@@ -41,9 +45,10 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
       isValid = false;
     }
 
-    if (password.isEmpty) {
+    // Validate password
+    if (password.isEmpty || password.length < 8) {
       setState(() {
-        passwordError = 'Please enter a password';
+        passwordError = 'Password must be at least 8 characters';
       });
       isValid = false;
     }
@@ -55,6 +60,7 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
     if (validate()) {
       // Handle the login logic (e.g., send the credentials to the backend)
       print('Email: $email, Password: $password');
+      Navigator.push(context, MaterialPageRoute(builder: (context) => UserHome()));
     }
   }
 
@@ -94,6 +100,7 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
                 onChanged: (value) {
                   setState(() {
                     email = value;
+                    if (emailError != null) emailError = null;  // Clear error when user types
                   });
                 },
                 keyboardType: TextInputType.emailAddress,
@@ -102,18 +109,30 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
               ),
               SizedBox(height: screenHeight * .025),
 
-              // Password TextField
+              // Password TextField with Show Password functionality
               InputField(
                 labelText: 'Password',
                 errorText: passwordError,
-                obscureText: true,
+                obscureText: !showPassword, // Show or hide password based on `showPassword`
                 onChanged: (value) {
                   setState(() {
                     password = value;
+                    if (passwordError != null) passwordError = null;  // Clear error when user types
                   });
                 },
                 onSubmitted: (val) => submit(),
                 textInputAction: TextInputAction.done,
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    showPassword ? Icons.visibility : Icons.visibility_off,
+                    color: Colors.black,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      showPassword = !showPassword; // Toggle password visibility
+                    });
+                  },
+                ),
               ),
               SizedBox(height: screenHeight * .03),
 
@@ -121,10 +140,16 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    // Navigate to ForgotPasswordScreen
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => ForgotPasswordScreen()),
+                    );
+                  },
                   child: const Text(
                     'Forgot Password?',
-                    style: TextStyle(color: Color.fromARGB(255, 255, 255, 255)),
+                    style: TextStyle(color: Colors.black),
                   ),
                 ),
               ),
@@ -132,16 +157,17 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
               // Login Button
               FormButton(
                 text: 'Log In',
-                 onPressed: () {
-                  Navigator.push(context,MaterialPageRoute(builder: (context) =>UserHome() ,)); // Navigate to register screen
-                },
+                onPressed: submit,
               ),
-              SizedBox(height: screenHeight * .15),
+              SizedBox(height: screenHeight * .15), // SizedBox for space
 
               // Sign Up Link
               TextButton(
                 onPressed: () {
-                 Navigator.push(context,MaterialPageRoute(builder: (context) =>UserRegistrationApp() ,)); // Navigate to register screen
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => UserRegistrationApp()),
+                  ); // Navigate to registration screen
                 },
                 child: RichText(
                   text: const TextSpan(
@@ -167,7 +193,7 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
   }
 }
 
-// Input Field Widget
+// Updated InputField widget to support suffixIcon for Show/Hide Password
 class InputField extends StatelessWidget {
   final String? labelText;
   final String? errorText;
@@ -177,6 +203,7 @@ class InputField extends StatelessWidget {
   final TextInputAction? textInputAction;
   final bool autoFocus;
   final bool obscureText;
+  final Widget? suffixIcon; // Add suffixIcon to support Show/Hide password
 
   const InputField({
     this.labelText,
@@ -187,6 +214,7 @@ class InputField extends StatelessWidget {
     this.textInputAction,
     this.autoFocus = false,
     this.obscureText = false,
+    this.suffixIcon, // Accept suffixIcon as parameter
     super.key,
   });
 
@@ -208,6 +236,7 @@ class InputField extends StatelessWidget {
         ),
         filled: true,
         fillColor: Colors.grey[200],
+        suffixIcon: suffixIcon, // Set suffixIcon here
       ),
     );
   }

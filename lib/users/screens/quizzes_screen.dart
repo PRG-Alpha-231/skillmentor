@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+
+
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -75,7 +77,9 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
   bool isCorrect = false;
   int score = 0;
   Color buttonColor = Color(0xFF6200EE); // A more aesthetic color for buttons (purple shade)
-  bool isCheckAnswerButtonDisabled = false; // Disable "Check Answer" button after checking the answer
+
+  // Disable button state after answer is checked
+  bool isCheckAnswerClicked = false;
 
   // Function to move to the next question
   void nextQuestion() {
@@ -83,7 +87,7 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
       currentQuestionIndex++;
       isAnswered = false; // Reset for the next question
       selectedAnswer = null;
-      isCheckAnswerButtonDisabled = false; // Re-enable "Check Answer" button when moving to the next question
+      isCheckAnswerClicked = false; // Enable buttons again for the next question
     });
   }
 
@@ -94,11 +98,11 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
     setState(() {
       isAnswered = true;
       isCorrect = selectedAnswer == questions[currentQuestionIndex]['answer'];
-      isCheckAnswerButtonDisabled = true; // Disable "Check Answer" button after answer is checked
 
       if (isCorrect) {
         score++;
       }
+      isCheckAnswerClicked = true; // Disable the Check Answer button
     });
   }
 
@@ -155,12 +159,12 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
                 itemBuilder: (context, index) {
                   String option = currentQuestion['options'][index];
                   return GestureDetector(
-                    onTap: isCheckAnswerButtonDisabled // Disable options after answer is checked
-                        ? null
-                        : () {
-                      setState(() {
-                        selectedAnswer = option;
-                      });
+                    onTap: () {
+                      if (!isCheckAnswerClicked) {
+                        setState(() {
+                          selectedAnswer = option;
+                        });
+                      }
                     },
                     child: Container(
                       padding: EdgeInsets.all(18),
@@ -216,9 +220,9 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
               alignment: Alignment.bottomCenter,
               child: Column(
                 children: [
-                  if (!isAnswered)
+                  if (!isAnswered && !isCheckAnswerClicked)
                     ElevatedButton(
-                      onPressed: isCheckAnswerButtonDisabled ? null : checkAnswer, // Disable after checking answer
+                      onPressed: checkAnswer,
                       style: buttonStyle(), // Use the common button style
                       child: Text(
                         'Check Answer',
@@ -228,12 +232,9 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
                   SizedBox(height: 15),
                   if (isAnswered && currentQuestionIndex < questions.length - 1)
                     ElevatedButton(
-                      onPressed: nextQuestion, // "Next Question" is always enabled
-                      style: buttonStyle(),
-                      child: Text(
-                        'Next Question',
-                        style: TextStyle(color: Colors.white),
-                      ),
+                      onPressed: nextQuestion,
+                      style: buttonStyle(), // Use the common button style
+                      child: Text('Next Question', style: TextStyle(color: Colors.white)),
                     ),
                   // Show score or end of quiz message
                   if (currentQuestionIndex == questions.length - 1)
@@ -267,7 +268,7 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
                           },
                         );
                       },
-                      style: buttonStyle(),
+                      style: buttonStyle(), // Use the common button style
                       child: Text('End Quiz', style: TextStyle(color: Colors.white)),
                     ),
                 ],
