@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:skillmentor/users/screens/flashcards_screen.dart';
 import 'package:skillmentor/users/screens/flashcards_screen.dart';
 import 'package:skillmentor/users/screens/materials_screen.dart';
+import 'package:skillmentor/users/screens/profile_screen.dart';
 import 'package:skillmentor/users/screens/questionpapers_screen.dart';
 import 'package:skillmentor/users/screens/questionpapers_screen.dart';
 import 'package:skillmentor/users/screens/quicknotes_screen.dart';
@@ -37,7 +38,7 @@ class ResourcesScreen extends StatelessWidget {
               bgColor: Color(0xFFB2F2BB), // Brighter pastel green
               icon: Icons.note, // Note icon for notes
               onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => QuicknotesScreen()));
+                Navigator.push(context, MaterialPageRoute(builder: (context) => QuickNotesScreen()));
               },
             ),
             SizedBox(height: 16),
@@ -90,19 +91,19 @@ class ResourcesScreen extends StatelessWidget {
           BottomNavigationBarItem(icon: Icon(Icons.school), label: 'Resources'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
-        onTap: (int index) {
-          switch (index) {
-            case 0:
-              Navigator.pop(context); // Navigate back to home screen
-              break;
-            case 1:
-            // Already on ResourcesScreen, no action needed
-              break;
-            case 2:
-              Navigator.pop(context); // Navigate back to profile screen
-              break;
-          }
-        },
+    onTap: (int index) {
+    switch (index) {
+    case 0:
+    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => UserHome()));
+    break;
+    case 1:
+    // Already on ResourcesScreen, no action needed
+    break;
+    case 2:
+    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ProfileScreen()));
+    break;
+    }
+    },
       ),
     );
   }
