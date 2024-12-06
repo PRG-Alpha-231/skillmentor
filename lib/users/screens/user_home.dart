@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:skillmentor/users/screens/profile_screen.dart';
 import 'package:skillmentor/users/screens/resource_screen.dart';
-import 'package:skillmentor/users/screens/last_opened_screen.dart'; // Import the screen for navigation
+import 'package:skillmentor/users/screens/last_opened_screen.dart'; // Corrected import for LastOpenedScreen
 
 // Extension for DateTime comparison
 extension DateTimeComparison on DateTime {
@@ -30,9 +30,6 @@ class _UserHomeState extends State<UserHome> {
   TextEditingController _taskController = TextEditingController();
   List<String> _tasks = [];
   List<bool> _taskCompletion = [];
-
-  // Bottom Navigation Bar index tracking
-  int _selectedIndex = 0; // Track selected index for bottom nav
 
   @override
   Widget build(BuildContext context) {
@@ -250,10 +247,15 @@ class _UserHomeState extends State<UserHome> {
                     ),
                     ReorderableListView(
                       shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
                       onReorder: _onReorder,
                       children: List.generate(_tasks.length, (index) {
                         return ListTile(
                           key: ValueKey(index),
+                          leading: ReorderableDragStartListener(
+                            index: index,
+                            child: Icon(Icons.drag_handle),
+                          ),
                           title: Text(
                             _tasks[index],
                             style: TextStyle(
@@ -278,34 +280,37 @@ class _UserHomeState extends State<UserHome> {
                 ),
               ),
 
-              // Last Opened Card
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => LastOpenedScreen()), // Navigate to the Last Opened screen
-                  );
-                },
-                child: Card(
-                  margin: EdgeInsets.symmetric(vertical: 8),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  elevation: 4,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Row(
-                      children: [
-                        Icon(Icons.history, size: 24),
-                        SizedBox(width: 16),
-                        Text(
-                          "Last Opened",
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
+              // Last Opened Card (Fixed layout issue)
+              SizedBox(
+                width: double.infinity, // Makes sure the GestureDetector takes the full width
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => LastOpenedScreen()), // Navigate to LastOpenedScreen
+                    );
+                  },
+                  child: Card(
+                    margin: EdgeInsets.symmetric(vertical: 8),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    elevation: 4,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Row(
+                        children: [
+                          Icon(Icons.history, size: 24),
+                          SizedBox(width: 16),
+                          Text(
+                            "Last Opened",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -314,102 +319,85 @@ class _UserHomeState extends State<UserHome> {
           ),
         ),
       ),
-
-      // Bottom Navigation Bar
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex, // Dynamically track selected index
-        items: const [
-          BottomNavigationBarItem(
-              icon: Icon(Icons.home),
-              label: 'Home'
-          ),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.school),
-              label: 'Resources'
-          ),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.person),
-              label: 'Profile'
-          ),
-        ],
-        onTap: (int index) {
-          setState(() {
-            _selectedIndex = index; // Update the selected index
-          });
-
+        currentIndex: 0,
+        onTap: (index) {
           switch (index) {
             case 0:
-            // Stay on the current screen
+              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => UserHome()));
               break;
             case 1:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => ResourcesScreen()),
-              );
+              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ResourcesScreen()));
               break;
             case 2:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => ProfileScreen()),
-              );
+              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ProfileScreen()));
               break;
           }
         },
+        items: [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.school),
+            label: 'Resources',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Profile',
+          ),
+        ],
       ),
     );
   }
 
-  // Helper methods
+  // Format date in 'dd MMM yyyy' format
   String _formatDate(DateTime date) {
-    return '${date.day}/${date.month}/${date.year}';
+    return "${date.day} ${_getMonthName(date.month)} ${date.year}";
   }
 
+  // Get day of the week (e.g., Monday, Tuesday, etc.)
   String _getDayOfWeek(DateTime date) {
-    switch (date.weekday) {
-      case DateTime.monday:
-        return 'Mon';
-      case DateTime.tuesday:
-        return 'Tue';
-      case DateTime.wednesday:
-        return 'Wed';
-      case DateTime.thursday:
-        return 'Thu';
-      case DateTime.friday:
-        return 'Fri';
-      case DateTime.saturday:
-        return 'Sat';
-      case DateTime.sunday:
-        return 'Sun';
-      default:
-        return '';
+    return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][date.weekday - 1];
+  }
+
+  // Get month name (e.g., January, February, etc.)
+  String _getMonthName(int month) {
+    return [
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    ][month - 1];
+  }
+
+  // Add task to the to-do list
+  void _addTask() {
+    if (_taskController.text.isNotEmpty) {
+      setState(() {
+        _tasks.add(_taskController.text);
+        _taskCompletion.add(false);
+        _taskController.clear();
+      });
     }
   }
 
-  void _addTask() {
-    if (_taskController.text.isEmpty) return;
+  // Reorder tasks
+  void _onReorder(int oldIndex, int newIndex) {
     setState(() {
-      _tasks.add(_taskController.text);
-      _taskCompletion.add(false);
+      if (newIndex > oldIndex) {
+        newIndex -= 1;
+      }
+      final task = _tasks.removeAt(oldIndex);
+      _tasks.insert(newIndex, task);
+      final completionStatus = _taskCompletion.removeAt(oldIndex);
+      _taskCompletion.insert(newIndex, completionStatus);
     });
-    _taskController.clear();
   }
 
+  // Delete task from to-do list
   void _deleteTask(int index) {
     setState(() {
       _tasks.removeAt(index);
       _taskCompletion.removeAt(index);
-    });
-  }
-
-  void _onReorder(int oldIndex, int newIndex) {
-    setState(() {
-      if (oldIndex < newIndex) {
-        newIndex -= 1;
-      }
-      final task = _tasks.removeAt(oldIndex);
-      final taskCompletion = _taskCompletion.removeAt(oldIndex);
-      _tasks.insert(newIndex, task);
-      _taskCompletion.insert(newIndex, taskCompletion);
     });
   }
 }
