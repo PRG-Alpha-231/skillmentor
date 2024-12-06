@@ -245,7 +245,7 @@ class _UserHomeState extends State<UserHome> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: 0,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home',),
           BottomNavigationBarItem(icon: Icon(Icons.school), label: 'Resources'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
