@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-
-
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -76,7 +74,6 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
   bool isAnswered = false;
   bool isCorrect = false;
   int score = 0;
-  Color buttonColor = Color(0xFF6200EE); // A more aesthetic color for buttons (purple shade)
 
   // Disable button state after answer is checked
   bool isCheckAnswerClicked = false;
@@ -84,10 +81,12 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
   // Function to move to the next question
   void nextQuestion() {
     setState(() {
-      currentQuestionIndex++;
-      isAnswered = false; // Reset for the next question
-      selectedAnswer = null;
-      isCheckAnswerClicked = false; // Enable buttons again for the next question
+      if (currentQuestionIndex < questions.length - 1) {
+        currentQuestionIndex++;
+        isAnswered = false; // Reset for the next question
+        selectedAnswer = null;
+        isCheckAnswerClicked = false; // Enable buttons again for the next question
+      }
     });
   }
 
@@ -109,7 +108,7 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
   // Common button style
   ButtonStyle buttonStyle() {
     return ElevatedButton.styleFrom(
-      backgroundColor: buttonColor, // Purple button color
+      backgroundColor: Color(0xFF6200EE), // Purple button color
       padding: EdgeInsets.symmetric(vertical: 15, horizontal: 40),
       textStyle: TextStyle(fontSize: 18),
       shape: RoundedRectangleBorder(
@@ -126,7 +125,7 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Quiz App',
+          'Quiz',
           style: TextStyle(color: Colors.white), // Make title text white
         ),
         toolbarHeight: 80,
@@ -139,21 +138,26 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Question Text with more space
-            Text(
-              currentQuestion['question'],
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87, // Dark text color for better readability
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            SizedBox(height: 30),
-
-            // Options with larger buttons and aesthetic colors
+            // Updated Question Section
             Expanded(
+              flex: 2,
+              child: SingleChildScrollView(
+                child: Text(
+                  currentQuestion['question'],
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87, // Dark text color for better readability
+                  ),
+                  textAlign: TextAlign.start,
+                ),
+              ),
+            ),
+            SizedBox(height: 20),
+
+            // Options Section
+            Expanded(
+              flex: 3, // Allow space for the options
               child: ListView.builder(
                 itemCount: currentQuestion['options'].length,
                 itemBuilder: (context, index) {
@@ -214,7 +218,7 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
               ),
             ),
 
-            // Repositioned buttons with more aesthetic design
+            // Repositioned buttons
             SizedBox(height: 20),
             Align(
               alignment: Alignment.bottomCenter,
@@ -223,20 +227,19 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
                   if (!isAnswered && !isCheckAnswerClicked)
                     ElevatedButton(
                       onPressed: checkAnswer,
-                      style: buttonStyle(), // Use the common button style
+                      style: buttonStyle(),
                       child: Text(
                         'Check Answer',
-                        style: TextStyle(color: Colors.white), // Make button text white
+                        style: TextStyle(color: Colors.white),
                       ),
                     ),
                   SizedBox(height: 15),
                   if (isAnswered && currentQuestionIndex < questions.length - 1)
                     ElevatedButton(
                       onPressed: nextQuestion,
-                      style: buttonStyle(), // Use the common button style
+                      style: buttonStyle(),
                       child: Text('Next Question', style: TextStyle(color: Colors.white)),
                     ),
-                  // Show score or end of quiz message
                   if (currentQuestionIndex == questions.length - 1)
                     ElevatedButton(
                       onPressed: () {
@@ -259,7 +262,7 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
                                 ),
                                 TextButton(
                                   onPressed: () {
-                                    Navigator.pop(context);
+                                    Navigator.push(context, MaterialPageRoute(builder: (context) => QuizzesScreen()));
                                   },
                                   child: Text('Exit', style: TextStyle(color: Colors.black)),
                                 ),
@@ -268,7 +271,7 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
                           },
                         );
                       },
-                      style: buttonStyle(), // Use the common button style
+                      style: buttonStyle(),
                       child: Text('End Quiz', style: TextStyle(color: Colors.white)),
                     ),
                 ],

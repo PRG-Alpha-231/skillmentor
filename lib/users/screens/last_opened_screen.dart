@@ -20,7 +20,7 @@ class LastOpenedScreen extends StatelessWidget {
         title: Text('Last Opened Screen'),
       ),
       body: Center(
-        child: Text('Hello World'),
+        child: Text('Most recently accessed content'),
       ),
     );
   }
