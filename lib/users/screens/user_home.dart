@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:skillmentor/users/screens/profile_screen.dart';
 import 'package:skillmentor/users/screens/resource_screen.dart';
-import 'package:skillmentor/users/screens/last_opened_screen.dart'; // Corrected import for LastOpenedScreen
+import 'package:skillmentor/users/screens/last_opened_screen.dart';
+
+import 'instructor_home_screen.dart'; // Corrected import for LastOpenedScreen
 
 // Extension for DateTime comparison
 extension DateTimeComparison on DateTime {
@@ -47,78 +49,7 @@ class _UserHomeState extends State<UserHome> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Week Calendar - Single Line
-              Container(
-                margin: EdgeInsets.symmetric(vertical: 16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: List.generate(7, (index) {
-                    final date = _selectedDate
-                        .subtract(Duration(days: _selectedDate.weekday - 1))
-                        .add(Duration(days: index));
-                    bool isToday = date.isSameDayAs(DateTime.now());  // Using the extension
-                    bool isUsed = _usedDates.any((d) => d.isSameDayAs(date));  // Using the extension
 
-                    return Expanded(
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _selectedDate = date;
-                          });
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                isUsed
-                                    ? "You used the app on ${_formatDate(date)}."
-                                    : "No app usage recorded on ${_formatDate(date)}.",
-                              ),
-                            ),
-                          );
-                        },
-                        child: Container(
-                          margin: EdgeInsets.symmetric(horizontal: 2),
-                          padding: EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: isToday
-                                ? Color(0xFFA3D8D2) // Light Teal
-                                : isUsed
-                                ? Color(0xFFFAD2C9) // Soft Peach
-                                : Color(0xFFE1E1E1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Column(
-                            children: [
-                              Text(
-                                '${date.day}',
-                                style: TextStyle(
-                                  color: isToday
-                                      ? Colors.white
-                                      : isUsed
-                                      ? Colors.black
-                                      : Colors.grey,
-                                  fontWeight: isToday
-                                      ? FontWeight.bold
-                                      : FontWeight.normal,
-                                ),
-                              ),
-                              Text(
-                                _getDayOfWeek(date),
-                                style: TextStyle(
-                                  color: isToday
-                                      ? Colors.white
-                                      : isUsed
-                                      ? Colors.black
-                                      : Colors.grey,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  }),
-                ),
-              ),
               Divider(height: 20, color: Colors.grey, thickness: 1), // Divider
 
               // Overall Progress Bar
@@ -304,6 +235,40 @@ class _UserHomeState extends State<UserHome> {
                           SizedBox(width: 16),
                           Text(
                             "Last Opened",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(
+                width: double.infinity, // Makes sure the GestureDetector takes the full width
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => InstructorHomeScreen()), // Navigate to instructor Home
+                    );
+                  },
+                  child: Card(
+                    margin: EdgeInsets.symmetric(vertical: 8),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    elevation: 4,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Row(
+                        children: [
+                          Icon(Icons.history, size: 24),
+                          SizedBox(width: 16),
+                          Text(
+                            "Instructor  Home",
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
