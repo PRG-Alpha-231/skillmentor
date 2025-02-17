@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:file_picker/file_picker.dart';
 
 class InstructorMaterialsScreen extends StatefulWidget {
   @override
@@ -6,27 +9,12 @@ class InstructorMaterialsScreen extends StatefulWidget {
 }
 
 class _InstructorMaterialsScreenState extends State<InstructorMaterialsScreen> {
-  // Extended sample data for course materials (can be fetched dynamically from an API)
+  bool _isLoading = false; // Track loading state
+
   final List<Map<String, String>> materials = [
+    // Sample data, it will be replaced by the API response
     {'title': 'Lecture 1 - Introduction to Flutter', 'type': 'PDF', 'url': 'https://example.com/lecture1.pdf'},
     {'title': 'Lecture 2 - Advanced Flutter', 'type': 'PDF', 'url': 'https://example.com/lecture2.pdf'},
-    {'title': 'Homework 1 - Basic Flutter Quiz', 'type': 'PDF', 'url': 'https://example.com/homework1.pdf'},
-    {'title': 'Project Guidelines', 'type': 'Word Document', 'url': 'https://example.com/project_guidelines.docx'},
-    {'title': 'Research Paper on Flutter', 'type': 'PDF', 'url': 'https://example.com/research_paper.pdf'},
-    {'title': 'Course Syllabus', 'type': 'PowerPoint', 'url': 'https://example.com/syllabus.pptx'},
-    {'title': 'Lecture Notes - Data Structures', 'type': 'PDF', 'url': 'https://example.com/data_structures_notes.pdf'},
-    {'title': 'Lecture Notes - Algorithms', 'type': 'PDF', 'url': 'https://example.com/algorithms_notes.pdf'},
-    {'title': 'Assignment - Flutter UI', 'type': 'Word Document', 'url': 'https://example.com/flutter_ui_assignment.docx'},
-    {'title': 'Course Evaluation Form', 'type': 'PDF', 'url': 'https://example.com/course_evaluation.pdf'},
-    {'title': 'Midterm Exam Review', 'type': 'PDF', 'url': 'https://example.com/midterm_review.pdf'},
-    {'title': 'Final Exam Study Guide', 'type': 'PDF', 'url': 'https://example.com/final_exam_study_guide.pdf'},
-    {'title': 'Lecture Slides - Introduction to Programming', 'type': 'PowerPoint', 'url': 'https://example.com/intro_programming_slides.pptx'},
-    {'title': 'Lecture 5 - Network Protocols', 'type': 'PDF', 'url': 'https://example.com/network_protocols_lecture.pdf'},
-    {'title': 'Lecture 6 - Databases and SQL', 'type': 'PDF', 'url': 'https://example.com/databases_sql_lecture.pdf'},
-    {'title': 'Course Feedback Survey', 'type': 'PDF', 'url': 'https://example.com/course_feedback.pdf'},
-    {'title': 'Instructor Contact Information', 'type': 'PDF', 'url': 'https://example.com/instructor_contact.pdf'},
-    {'title': 'Code Samples for Flutter', 'type': 'GitHub Repository', 'url': 'https://github.com/example/flutter_code_samples'},
-    {'title': 'Flutter Debugging Tips', 'type': 'PDF', 'url': 'https://example.com/flutter_debugging_tips.pdf'},
   ];
 
   String _sortBy = 'Title'; // Default sorting by title
@@ -42,21 +30,56 @@ class _InstructorMaterialsScreenState extends State<InstructorMaterialsScreen> {
     });
   }
 
-  // Function to handle uploading new materials
-  void _uploadMaterial() {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: Text('Upload New Material'),
-        content: UploadMaterialForm(),
-        actions: [
-          TextButton(
-            child: Text('Close'),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-        ],
-      ),
-    );
+  Future<void> _addMaterial() async {
+    // Step 1: Pick a file
+    FilePickerResult? result = await FilePicker.platform.pickFiles();
+
+    if (result != null) {
+      // Step 2: Get the selected file and its path
+      PlatformFile file = result.files.first;
+      String filePath = file.path ?? '';
+
+      setState(() {
+        _isLoading = true; // Show loading indicator
+      });
+
+      try {
+        // Step 3: Upload the file to the server
+        var request = http.MultipartRequest(
+          'POST',
+          Uri.parse('https://401d-117-211-183-204.ngrok-free.app/api/add_materials/'),
+        );
+
+        // Add the file to the request
+        request.files.add(await http.MultipartFile.fromPath('file', filePath));
+
+        // Add other data (if necessary)
+        request.fields['name'] = 'testname';
+        request.fields['email'] = 'admin@gmail.com';
+        request.fields['category'] = 'Materials';
+
+        // Send the request
+        var response = await request.send();
+        print(response.statusCode);
+
+        if (response.statusCode == 201) {
+          // Handle successful API response (e.g., update the materials list)
+          print('Material added successfully');
+        } else {
+          // Handle error response
+          print('Failed to add material');
+        }
+      } catch (e) {
+        print('Error: $e');
+      } finally {
+        setState(() {
+          _isLoading = false; // Hide loading indicator
+        });
+      }
+    } else {
+      // User canceled the file picking
+      print("File picking canceled");
+    }
   }
 
   @override
@@ -84,22 +107,28 @@ class _InstructorMaterialsScreenState extends State<InstructorMaterialsScreen> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: ListView.separated(
-          itemCount: materials.length,
-          itemBuilder: (context, index) {
-            final material = materials[index];
-            return MaterialCard(material: material);
-          },
-          separatorBuilder: (context, index) => Divider(color: Colors.grey.shade300),
-          physics: BouncingScrollPhysics(),  // Smooth scrolling with bounce effect
+        child: Column(
+          children: [
+            ElevatedButton(
+              onPressed: _addMaterial, // Call _addMaterial when button is pressed
+              child: Text('Add Material'),
+            ),
+            if (_isLoading) // Show loading indicator while waiting
+              Center(child: CircularProgressIndicator()),
+            if (!_isLoading) // Display materials when not loading
+              Expanded(
+                child: ListView.separated(
+                  itemCount: materials.length,
+                  itemBuilder: (context, index) {
+                    final material = materials[index];
+                    return MaterialCard(material: material);
+                  },
+                  separatorBuilder: (context, index) => Divider(color: Colors.grey.shade300),
+                  physics: BouncingScrollPhysics(), // Smooth scrolling with bounce effect
+                ),
+              ),
+          ],
         ),
-      ),
-      // Floating Action Button for uploading new material
-      floatingActionButton: FloatingActionButton(
-        onPressed: _uploadMaterial,  // Calls the upload function when pressed
-        child: Icon(Icons.add),       // Plus icon
-        tooltip: 'Upload Material',   // Tooltip when hovered over
-        backgroundColor: Colors.blueAccent,  // Background color of the button
       ),
     );
   }
@@ -175,107 +204,6 @@ class MaterialCard extends StatelessWidget {
               print('Download the material from $url');
               Navigator.of(context).pop();
             },
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class UploadMaterialForm extends StatefulWidget {
-  @override
-  _UploadMaterialFormState createState() => _UploadMaterialFormState();
-}
-
-class _UploadMaterialFormState extends State<UploadMaterialForm> {
-  final _formKey = GlobalKey<FormState>();
-  final _titleController = TextEditingController();
-  final _typeController = TextEditingController();
-  final _urlController = TextEditingController();
-
-  @override
-  Widget build(BuildContext context) {
-    return Form(
-      key: _formKey,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Title Field
-          TextFormField(
-            controller: _titleController,
-            decoration: InputDecoration(
-              labelText: 'Material Title',
-              border: OutlineInputBorder(),
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter the material title';
-              }
-              return null;
-            },
-          ),
-          SizedBox(height: 8),
-
-          // Type Field
-          TextFormField(
-            controller: _typeController,
-            decoration: InputDecoration(
-              labelText: 'Material Type',
-              border: OutlineInputBorder(),
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter the material type (e.g., PDF, Word)';
-              }
-              return null;
-            },
-          ),
-          SizedBox(height: 8),
-
-          // URL Field
-          TextFormField(
-            controller: _urlController,
-            decoration: InputDecoration(
-              labelText: 'Material URL',
-              border: OutlineInputBorder(),
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter the material URL';
-              }
-              return null;
-            },
-          ),
-          SizedBox(height: 16),
-
-          // Submit Button
-          ElevatedButton(
-            onPressed: () {
-              if (_formKey.currentState!.validate()) {
-                // Handle the form submission logic here
-                final title = _titleController.text;
-                final type = _typeController.text;
-                final url = _urlController.text;
-
-                // Example: Show a dialog with submitted information
-                showDialog(
-                  context: context,
-                  builder: (_) => AlertDialog(
-                    title: Text('New Material Uploaded'),
-                    content: Text('Title: $title\nType: $type\nURL: $url'),
-                    actions: [
-                      TextButton(
-                        child: Text('OK'),
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                      ),
-                    ],
-                  ),
-                );
-              }
-            },
-            child: Text('Upload'),
           ),
         ],
       ),

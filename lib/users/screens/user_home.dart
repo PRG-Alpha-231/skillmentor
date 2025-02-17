@@ -284,6 +284,52 @@ class _UserHomeState extends State<UserHome> {
           ),
         ),
       ),
+
+      // Position the Elevated Button in the Bottom Right corner using a Stack
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.all(12.0), // Adjusted padding for a sleeker look
+        child: Align(
+          alignment: Alignment.bottomRight,
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              iconColor: Colors.lightBlue, // Light blue color
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12), // More angular for a squarish look
+              ),
+              padding: EdgeInsets.symmetric(vertical: 16, horizontal: 18), // Increased padding for a bigger button
+              elevation: 6, // Slightly increased elevation
+            ),
+            onPressed: () {
+              // Action to perform when button is pressed
+              print('Button pressed');
+            },
+            child: Stack(
+              alignment: Alignment.bottomRight,
+              children: [
+                Icon(
+                  Icons.check, // Change this to your desired icon
+                  size: 24, // Slightly larger icon size
+                  color: Colors.white,
+                ),
+                Positioned(
+                  bottom: 0,
+                  right: 0,
+                  child: CircleAvatar(
+                    radius: 10, // Smaller alert icon
+                    backgroundColor: Colors.red, // Alert icon color
+                    child: Icon(
+                      Icons.warning, // Alert symbol (!)
+                      size: 14, // Smaller alert symbol
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: 0,
         onTap: (index) {

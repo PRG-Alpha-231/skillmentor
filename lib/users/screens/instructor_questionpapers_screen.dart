@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
+import 'dart:io';
+import 'package:http/http.dart' as http;
 
 class InstructorQuestionpapersScreen extends StatefulWidget {
   @override
@@ -8,18 +11,15 @@ class InstructorQuestionpapersScreen extends StatefulWidget {
 
 class _InstructorQuestionpapersScreenState
     extends State<InstructorQuestionpapersScreen> {
-  // Extended sample data for question papers (PDF only) with Year information
   final List<Map<String, String>> questionPapers = [
     {'title': 'Midterm Exam - Fall 2025', 'url': 'https://example.com/midterm_exam_fall_2025.pdf', 'year': '2025'},
     {'title': 'Final Exam - Spring 2025', 'url': 'https://example.com/final_exam_spring_2025.pdf', 'year': '2025'},
     {'title': 'Midterm Exam - Fall 2024', 'url': 'https://example.com/midterm_exam_fall_2024.pdf', 'year': '2024'},
     {'title': 'Final Exam - Spring 2024', 'url': 'https://example.com/final_exam_spring_2024.pdf', 'year': '2024'},
-    // Add more question papers here...
   ];
 
-  String _sortBy = 'Title'; // Default sorting by title
+  String _sortBy = 'Title';
 
-  // Function to sort by title or year
   void _sortQuestionPapers(String criterion) {
     setState(() {
       if (criterion == 'Title') {
@@ -27,30 +27,53 @@ class _InstructorQuestionpapersScreenState
       } else if (criterion == 'Year') {
         questionPapers.sort((a, b) => int.parse(b['year']!).compareTo(int.parse(a['year']!)));
       }
-      _sortBy = criterion; // Update the sort criterion
+      _sortBy = criterion;
     });
   }
 
-  // Function to handle the "Add New Question Paper" action
-  void _addNewQuestionPaper() {
-    // Show the Upload Material Form as a modal bottom sheet
-    showModalBottomSheet(
-      context: context,
-      builder: (context) {
-        return UploadMaterialForm();
-      },
-      isScrollControlled: true,  // Allows for a more flexible height for the modal
+  Future<void> _pickAndUploadFile() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf'],
     );
+
+    if (result != null) {
+      File selectedFile = File(result.files.single.path!);
+      await _uploadFile(selectedFile);
+    }
+  }
+
+  Future<void> _uploadFile(File file) async {
+    try {
+      var request = http.MultipartRequest('POST', Uri.parse('http://127.0.0.1:8000/api/add_materials/'));
+      request.fields['name'] = 'Uploaded File';
+      request.fields['description'] = 'Uploaded via Flutter';
+      request.fields['category'] = 'Exam Papers';
+      request.files.add(await http.MultipartFile.fromPath('file', file.path));
+
+      var response = await request.send();
+
+      if (response.statusCode == 201) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Upload Successful!'), backgroundColor: Colors.green),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Upload Failed!'), backgroundColor: Colors.red),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error uploading file: $e'), backgroundColor: Colors.red),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'Question Papers',
-          style: TextStyle(color: Colors.grey[800]),
-        ),
+        title: Text('Question Papers', style: TextStyle(color: Colors.grey[800])),
         backgroundColor: Colors.grey[200],
         elevation: 2.0,
         actions: [
@@ -82,7 +105,7 @@ class _InstructorQuestionpapersScreenState
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _addNewQuestionPaper,
+        onPressed: _pickAndUploadFile,
         child: Icon(Icons.add),
         backgroundColor: Colors.blueGrey[600],
         tooltip: 'Add New Question Paper',
@@ -108,198 +131,13 @@ class QuestionPaperCard extends StatelessWidget {
         contentPadding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 20.0),
         title: Text(
           paper['title']!,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: Colors.black87,
-          ),
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87),
         ),
         subtitle: Text(
           'Year: ${paper['year']}',
-          style: TextStyle(
-            fontSize: 14,
-            color: Colors.grey.shade600,
-          ),
+          style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
         ),
-        trailing: Icon(
-          Icons.download,
-          color: Colors.blueGrey[600],
-        ),
-        onTap: () {
-          _openPaper(context, paper['url']!);
-        },
-      ),
-    );
-  }
-
-  void _openPaper(BuildContext context, String url) {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        title: Text(
-          'Open Question Paper',
-          style: TextStyle(
-            color: Colors.blueGrey[600],
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        content: Text(
-          'Would you like to view or download this question paper?',
-          style: TextStyle(color: Colors.black54),
-        ),
-        actions: [
-          TextButton(
-            child: Text('View', style: TextStyle(color: Colors.blueGrey[600])),
-            onPressed: () {
-              print('View the question paper at $url');
-              Navigator.of(context).pop();
-            },
-          ),
-          TextButton(
-            child: Text('Download', style: TextStyle(color: Colors.blueGrey[600])),
-            onPressed: () {
-              print('Download the question paper from $url');
-              Navigator.of(context).pop();
-            },
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class UploadMaterialForm extends StatefulWidget {
-  @override
-  _UploadMaterialFormState createState() => _UploadMaterialFormState();
-}
-
-class _UploadMaterialFormState extends State<UploadMaterialForm> {
-  final _formKey = GlobalKey<FormState>();
-  final _titleController = TextEditingController();
-  final _typeController = TextEditingController();
-  final _urlController = TextEditingController();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Title Field
-            TextFormField(
-              controller: _titleController,
-              decoration: InputDecoration(
-                labelText: 'Material Title',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                filled: true,
-                fillColor: Colors.grey[100], // Light background for input
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter the material title';
-                }
-                return null;
-              },
-            ),
-            SizedBox(height: 12),
-
-            // Type Field
-            TextFormField(
-              controller: _typeController,
-              decoration: InputDecoration(
-                labelText: 'Material Type (e.g., PDF)',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                filled: true,
-                fillColor: Colors.grey[100], // Light background for input
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter the material type';
-                }
-                return null;
-              },
-            ),
-            SizedBox(height: 12),
-
-            // URL Field
-            TextFormField(
-              controller: _urlController,
-              decoration: InputDecoration(
-                labelText: 'Material URL',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                filled: true,
-                fillColor: Colors.grey[100], // Light background for input
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter the material URL';
-                }
-                return null;
-              },
-            ),
-            SizedBox(height: 16),
-
-            // Submit Button
-            ElevatedButton(
-              onPressed: () {
-                if (_formKey.currentState!.validate()) {
-                  // Handle form submission logic here
-                  final title = _titleController.text;
-                  final type = _typeController.text;
-                  final url = _urlController.text;
-
-                  // Example: Show a dialog with submitted information
-                  showDialog(
-                    context: context,
-                    builder: (_) => AlertDialog(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      title: Text(
-                        'New Material Uploaded',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blueGrey[600],
-                        ),
-                      ),
-                      content: Text(
-                        'Title: $title\nType: $type\nURL: $url',
-                        style: TextStyle(
-                          color: Colors.black54,
-                        ),
-                      ),
-                      actions: [
-                        TextButton(
-                          child: Text('OK', style: TextStyle(color: Colors.blueGrey[600])),
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                        ),
-                      ],
-                    ),
-                  );
-                }
-              },
-              child: Text('Upload'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blueGrey[600], // Button background color
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15), // Rounded button
-                ),
-              ),
-            ),
-          ],
-        ),
+        trailing: Icon(Icons.download, color: Colors.blueGrey[600]),
       ),
     );
   }

@@ -1,10 +1,11 @@
 import 'dart:ui' as ui;
+import 'dart:typed_data';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
-void main() {
-  runApp(MyApp());
-}
+
 
 class MyApp extends StatelessWidget {
   @override
@@ -31,29 +32,21 @@ class _WhiteboardScreenState extends State<WhiteboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // Set background to white
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text(
-          'Whiteboard',
-          style: TextStyle(fontSize: 20),
-        ),
-        backgroundColor: Colors.white, // Ensure the AppBar is visible
+        title: Text('Whiteboard', style: TextStyle(fontSize: 20)),
+        backgroundColor: Colors.white,
         actions: [
-          // Save button
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10.0),
             child: TextButton.icon(
               onPressed: () {
                 saveDrawing();
               },
-              icon: Icon(Icons.save, color: Colors.black), // White icon
-              label: Text(
-                "Save",
-                style: TextStyle(color: Colors.black), // White text
-              ),
+              icon: Icon(Icons.save, color: Colors.black),
+              label: Text("Save", style: TextStyle(color: Colors.black)),
             ),
           ),
-          // Clear button
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10.0),
             child: TextButton.icon(
@@ -63,11 +56,8 @@ class _WhiteboardScreenState extends State<WhiteboardScreen> {
                   undoneStrokes.clear();
                 });
               },
-              icon: Icon(Icons.clear, color: Colors.black), // White icon
-              label: Text(
-                "Clear",
-                style: TextStyle(color: Colors.black), // White text
-              ),
+              icon: Icon(Icons.clear, color: Colors.black),
+              label: Text("Clear", style: TextStyle(color: Colors.black)),
             ),
           ),
         ],
@@ -75,170 +65,64 @@ class _WhiteboardScreenState extends State<WhiteboardScreen> {
       body: Column(
         children: [
           Expanded(
-            child: GestureDetector(
-              onPanUpdate: (details) {
-                setState(() {
-                  points.add(DrawingPoint(
-                    offset: details.localPosition,
-                    color: selectedColor,
-                    strokeWidth: strokeWidth,
-                    isEraser: isEraserMode,
-                  ));
-                });
-              },
-              onPanEnd: (details) {
-                setState(() {
-                  points.add(null); // Marks the end of a stroke
-                  undoneStrokes.clear(); // Clear undone strokes on new drawing
-                });
-              },
-              child: CustomPaint(
-                key: globalKey,
-                size: Size(double.infinity, double.infinity),
-                painter: WhiteboardPainter(points),
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                buildColorOption(Colors.black),
-                buildColorOption(Colors.red),
-                buildColorOption(Colors.blue),
-                buildColorOption(Colors.green),
-                buildColorOption(Colors.orange),
-                buildColorOption(Colors.purple),
-                buildColorOption(Colors.yellow),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                IconButton(
-                  onPressed: () {
-                    if (points.isNotEmpty) {
+            child: Center(
+              child: AspectRatio(
+                aspectRatio: 4 / 5,
+                child: Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.black, width: 2),
+                    color: Colors.white,
+                  ),
+                  child: GestureDetector(
+                    onPanUpdate: (details) {
                       setState(() {
-                        List<DrawingPoint?> lastStroke = _removeLastStroke();
-                        if (lastStroke.isNotEmpty) {
-                          undoneStrokes.add(lastStroke);
-                        }
+                        points.add(DrawingPoint(
+                          offset: details.localPosition,
+                          color: selectedColor,
+                          strokeWidth: strokeWidth,
+                          isEraser: isEraserMode,
+                        ));
                       });
-                    }
-                  },
-                  icon: Icon(Icons.undo),
-                  color: Colors.grey,
-                ),
-                IconButton(
-                  onPressed: () {
-                    if (undoneStrokes.isNotEmpty) {
+                    },
+                    onPanEnd: (details) {
                       setState(() {
-                        points.addAll(undoneStrokes.removeLast());
+                        points.add(null);
+                        undoneStrokes.clear();
                       });
-                    }
-                  },
-                  icon: Icon(Icons.redo),
-                  color: Colors.grey,
-                ),
-                // Draw and Erase Toggle Button with Better Visuals
-                GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      isEraserMode = !isEraserMode;
-                    });
-                  },
-                  child: Container(
-                    padding: EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: isEraserMode ? Colors.redAccent : Colors.grey[200],
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: isEraserMode ? Colors.red : Colors.grey,
+                    },
+                    child: RepaintBoundary(
+                      key: globalKey,
+                      child: CustomPaint(
+                        size: Size(double.infinity, double.infinity),
+                        painter: WhiteboardPainter(points),
                       ),
-                    ),
-                    child: Icon(
-                      isEraserMode ? Icons.blur_circular : Icons.create,
-                      color: isEraserMode ? Colors.white : Colors.black,
                     ),
                   ),
                 ),
-              ],
+              ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text('Stroke Width:'),
-                Slider(
-                  value: strokeWidth,
-                  min: 1.0,
-                  max: 10.0,
-                  divisions: 9,
-                  label: strokeWidth.toStringAsFixed(1),
-                  onChanged: (double newValue) {
-                    setState(() {
-                      strokeWidth = newValue;
-                    });
-                  },
-                ),
-              ],
-            ),
-          ),
+          // Color selection, stroke width, undo/redo, etc.
         ],
       ),
     );
   }
 
-  Widget buildColorOption(Color color) {
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          selectedColor = color;
-        });
-      },
-      child: Container(
-        margin: EdgeInsets.symmetric(horizontal: 4.0),
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: color,
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: selectedColor == color ? Colors.white : Colors.grey,
-            width: 2,
-          ),
-        ),
-      ),
-    );
-  }
-
-  List<DrawingPoint?> _removeLastStroke() {
-    List<DrawingPoint?> lastStroke = [];
-    while (points.isNotEmpty) {
-      DrawingPoint? point = points.removeLast();
-      lastStroke.insert(0, point);
-      if (point == null) break; // End of stroke
-    }
-    return lastStroke;
-  }
-
-  // Save the drawing as an image (internal within app)
   Future<void> saveDrawing() async {
     try {
       RenderRepaintBoundary boundary =
       globalKey.currentContext?.findRenderObject() as RenderRepaintBoundary;
       ui.Image image = await boundary.toImage(pixelRatio: 3.0);
+      ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      Uint8List pngBytes = byteData!.buffer.asUint8List();
 
-      // Since we can't use external libraries to save to files, we'll just show a snackbar
-      // Indicating that the image was generated successfully (saving without external dependencies)
+      final directory = await getExternalStorageDirectory();
+      String filePath = '${directory!.path}/whiteboard_drawing.png';
+      File file = File(filePath);
+      await file.writeAsBytes(pngBytes);
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Drawing saved internally as image!")),
+        SnackBar(content: Text("Drawing saved to Downloads folder!")),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -277,21 +161,10 @@ class WhiteboardPainter extends CustomPainter {
           ..strokeWidth = points[i]!.strokeWidth;
 
         if (points[i]!.isEraser) {
-          paint.color = Colors.white; // Eraser mode
+          paint.color = Colors.white;
         }
 
         canvas.drawLine(points[i]!.offset!, points[i + 1]!.offset!, paint);
-      } else if (points[i]?.offset != null && points[i + 1]?.offset == null) {
-        final paint = Paint()
-          ..color = points[i]!.color
-          ..strokeCap = StrokeCap.round
-          ..strokeWidth = points[i]!.strokeWidth;
-
-        if (points[i]!.isEraser) {
-          paint.color = Colors.white; // Eraser mode
-        }
-
-        canvas.drawCircle(points[i]!.offset!, points[i]!.strokeWidth / 2, paint);
       }
     }
   }

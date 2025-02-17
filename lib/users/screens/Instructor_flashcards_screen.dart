@@ -55,53 +55,50 @@ class _InstructorFlashcardsScreen extends State<InstructorFlashcardsScreen> {
     });
   }
 
-  // Function to show a dialog for adding a new flashcard
+  // Function to show dialog box for adding a new flashcard
   void _showAddFlashcardDialog() {
-    final TextEditingController _questionController = TextEditingController();
-    final TextEditingController _answerController = TextEditingController();
+    TextEditingController questionController = TextEditingController();
+    TextEditingController answerController = TextEditingController();
 
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Add New Flashcard'),
+          title: Text("Add Flashcard"),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
-                controller: _questionController,
-                decoration: InputDecoration(
-                  labelText: 'Question',
-                ),
+                controller: questionController,
+                decoration: InputDecoration(labelText: "Question"),
               ),
+              SizedBox(height: 8),
               TextField(
-                controller: _answerController,
-                decoration: InputDecoration(
-                  labelText: 'Answer',
-                ),
+                controller: answerController,
+                decoration: InputDecoration(labelText: "Answer"),
               ),
             ],
           ),
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop();
+                Navigator.of(context).pop(); // Close dialog
               },
-              child: Text('Cancel'),
+              child: Text("Cancel"),
             ),
             TextButton(
               onPressed: () {
-                // Add the new flashcard
-                setState(() {
-                  flashcards.add({
-                    "question": _questionController.text,
-                    "answer": _answerController.text,
-                  });
-                });
+                String question = questionController.text.trim();
+                String answer = answerController.text.trim();
 
-                Navigator.of(context).pop(); // Close the dialog
+                if (question.isNotEmpty && answer.isNotEmpty) {
+                  setState(() {
+                    flashcards.add({"question": question, "answer": answer});
+                  });
+                  Navigator.of(context).pop(); // Close dialog
+                }
               },
-              child: Text('Add'),
+              child: Text("Add"),
             ),
           ],
         );
@@ -114,7 +111,7 @@ class _InstructorFlashcardsScreen extends State<InstructorFlashcardsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text("Flash Cards"),
-        backgroundColor: Colors.blueAccent,
+        backgroundColor: Colors.purpleAccent,
       ),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -134,7 +131,7 @@ class _InstructorFlashcardsScreen extends State<InstructorFlashcardsScreen> {
                     width: 250, // Reduced width
                     height: 150, // Reduced height
                     decoration: BoxDecoration(
-                      color: _isFlashing ? Colors.lightBlueAccent : Colors.blueAccent, // New colors
+                      color: _isFlashing ? Colors.lightBlueAccent : Colors.purpleAccent, // Updated colors
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
@@ -185,10 +182,12 @@ class _InstructorFlashcardsScreen extends State<InstructorFlashcardsScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _showAddFlashcardDialog, // Show the dialog to add a flashcard
-        backgroundColor: Colors.blueAccent,
-        child: Icon(Icons.add, color: Colors.white), // Plus icon
+        onPressed: _showAddFlashcardDialog,
+        backgroundColor: Colors.purpleAccent,
+        child: Icon(Icons.add, color: Colors.white),
       ),
     );
   }
 }
+
+
