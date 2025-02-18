@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'AdminHomeScreen.dart';
 import 'add_subjects.dart'; // Ensure that add_subjects.dart is properly imported
 
 class AdminApp extends StatelessWidget {
@@ -53,7 +54,7 @@ class LoginPage extends StatelessWidget {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => AddSubjectScreen()),
+                    MaterialPageRoute(builder: (context) => AdminHomeScreen()),
                   );
                 },
                 child: Text("Login"),

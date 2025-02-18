@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'AdminHomeScreen.dart';
 
 class AddInstructorScreen extends StatefulWidget {
   @override
@@ -53,9 +54,12 @@ class _AddInstructorScreenState extends State<AddInstructorScreen> {
     });
   }
 
-  // Function to navigate to the next screen
+  // Function to navigate to the Admin Home Screen
   void _navigateToNext() {
-    Navigator.pushReplacementNamed(context, '/next_screen'); // Update with your actual route
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => AdminHomeScreen()),
+    );
   }
 
   @override
@@ -65,71 +69,79 @@ class _AddInstructorScreenState extends State<AddInstructorScreen> {
         title: Text('Add New Instructor'),
         backgroundColor: Colors.deepPurple,
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Form(
-                key: _formKey,
+      body: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildTextField(_instructorNameController, 'Instructor Name', Icons.person, true),
-                    _buildTextField(_instructorEmailController, 'Instructor Email', Icons.email, true),
-                    _buildDropdownField('Subject', _selectedSubject, subjects),
-                    SizedBox(height: 20),
-                    ElevatedButton(
-                      onPressed: _addInstructor,
-                      child: Text('Add Instructor'),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: 20),
-              ListView.builder(
-                shrinkWrap: true,
-                physics: NeverScrollableScrollPhysics(),
-                itemCount: instructors.length,
-                itemBuilder: (context, index) {
-                  final instructor = instructors[index];
-                  return Card(
-                    margin: EdgeInsets.symmetric(vertical: 8),
-                    child: ListTile(
-                      title: Text(instructor['name'] ?? ''),
-                      subtitle: Text('Email: ${instructor['email']} \nSubject: ${instructor['subject']}'),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
+                    Form(
+                      key: _formKey,
+                      child: Column(
                         children: [
-                          IconButton(
-                            icon: Icon(Icons.edit, color: Colors.blueAccent),
-                            onPressed: () => _editInstructor(index),
-                          ),
-                          IconButton(
-                            icon: Icon(Icons.delete, color: Colors.redAccent),
-                            onPressed: () => _deleteInstructor(index),
+                          _buildTextField(_instructorNameController, 'Instructor Name', Icons.person, true),
+                          _buildTextField(_instructorEmailController, 'Instructor Email', Icons.email, true),
+                          _buildDropdownField('Subject', _selectedSubject, subjects),
+                          SizedBox(height: 20),
+                          ElevatedButton(
+                            onPressed: _addInstructor,
+                            child: Text('Add Instructor'),
                           ),
                         ],
                       ),
                     ),
-                  );
-                },
-              ),
-              SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _navigateToNext,
-                  child: Text('Next'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.deepPurple,
-                    foregroundColor: Colors.white,
-                  ),
+                    SizedBox(height: 20),
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
+                      itemCount: instructors.length,
+                      itemBuilder: (context, index) {
+                        final instructor = instructors[index];
+                        return Card(
+                          margin: EdgeInsets.symmetric(vertical: 8),
+                          child: ListTile(
+                            title: Text(instructor['name'] ?? ''),
+                            subtitle: Text('Email: ${instructor['email']} \nSubject: ${instructor['subject']}'),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: Icon(Icons.edit, color: Colors.blueAccent),
+                                  onPressed: () => _editInstructor(index),
+                                ),
+                                IconButton(
+                                  icon: Icon(Icons.delete, color: Colors.redAccent),
+                                  onPressed: () => _deleteInstructor(index),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
-        ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _navigateToNext,
+                child: Text('Next'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.deepPurple,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
