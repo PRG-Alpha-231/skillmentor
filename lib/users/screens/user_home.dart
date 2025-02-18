@@ -3,6 +3,7 @@ import 'package:skillmentor/users/screens/profile_screen.dart';
 import 'package:skillmentor/users/screens/resource_screen.dart';
 import 'package:skillmentor/users/screens/last_opened_screen.dart';
 
+import 'admin.dart';
 import 'instructor_home_screen.dart'; // Corrected import for LastOpenedScreen
 
 // Extension for DateTime comparison
@@ -300,7 +301,7 @@ class _UserHomeState extends State<UserHome> {
               elevation: 6, // Slightly increased elevation
             ),
             onPressed: () {
-              // Action to perform when button is pressed
+              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => AdminApp())); // Action to perform when button is pressed
               print('Button pressed');
             },
             child: Stack(

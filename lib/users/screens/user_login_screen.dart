@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:skillmentor/users/screens/user_home.dart';
 import 'package:skillmentor/users/screens/user_registration_screen.dart';
-import 'package:skillmentor/users/screens/forgot_password_screen.dart'; // Add ForgotPasswordScreen
+import 'package:skillmentor/users/screens/forgot_password_screen.dart'; //
+
+import 'admin.dart';
 
 class UserLoginScreen extends StatefulWidget {
   const UserLoginScreen({super.key});
@@ -166,16 +168,16 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => UserRegistrationApp()),
+                    MaterialPageRoute(builder: (context) => AdminApp()),
                   ); // Navigate to registration screen
                 },
                 child: RichText(
                   text: const TextSpan(
-                    text: "Don't have an account? ",
+                    text: "Not a user, ",
                     style: TextStyle(color: Colors.black),
                     children: [
                       TextSpan(
-                        text: 'Sign Up',
+                        text: 'Login',
                         style: TextStyle(
                           color: Color.fromARGB(255, 3, 6, 148),
                           fontWeight: FontWeight.bold,
