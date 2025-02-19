@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:skillmentor/users/screens/flashcards_screen.dart';
 import 'package:skillmentor/users/screens/materials_screen.dart';
+import 'package:skillmentor/users/screens/pdf_analyzer.dart';
 import 'package:skillmentor/users/screens/profile_screen.dart';
 import 'package:skillmentor/users/screens/questionpapers_screen.dart';
 import 'package:skillmentor/users/screens/quicknotes_screen.dart';
@@ -81,6 +82,16 @@ class ResourcesScreen extends StatelessWidget {
                   icon: Icons.description, // File icon for question papers
                   onTap: () {
                     Navigator.push(context, MaterialPageRoute(builder: (context) => QuestionpapersScreen()));
+                  },
+                ),
+                SizedBox(height: 16),
+                CustomResourceCard(
+                  title: "PDF Analyzer",
+                  description: "Analyze your PDFs with the help of AI.",
+                  bgColor: Color(0xFFFFC4C4), // Brighter pastel red
+                  icon: Icons.picture_as_pdf, // PDF icon
+                  onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => PDFAnalyzerPage()));
                   },
                 ),
               ],

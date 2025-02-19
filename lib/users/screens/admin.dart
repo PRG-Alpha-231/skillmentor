@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'AdminHomeScreen.dart';
+import 'add_institute.dart';
 import 'add_subjects.dart'; // Ensure that add_subjects.dart is properly imported
 
 class AdminApp extends StatelessWidget {
@@ -92,13 +93,7 @@ class SignUpPage extends StatelessWidget {
               SizedBox(height: 50),
               Text("Get Started", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
               SizedBox(height: 20),
-              TextField(
-                decoration: InputDecoration(labelText: "Institute Name *"),
-              ),
-              SizedBox(height: 10),
-              TextField(
-                decoration: InputDecoration(labelText: "Description (Optional)"),
-              ),
+
               SizedBox(height: 10),
               TextField(
                 decoration: InputDecoration(labelText: "Admin Email *"),
@@ -118,7 +113,7 @@ class SignUpPage extends StatelessWidget {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => AddSubjectScreen()),
+                    MaterialPageRoute(builder: (context) => AddInstituteScreen()),
                   );
                 },
                 child: Text("Next"),
