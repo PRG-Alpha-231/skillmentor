@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:skillmentor/baseurl.dart';
 import 'package:skillmentor/users/screens/user_home.dart';
 import 'package:skillmentor/users/screens/user_registration_screen.dart';
 import 'package:skillmentor/users/screens/forgot_password_screen.dart'; //
 
 import 'admin.dart';
+
+import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class UserLoginScreen extends StatefulWidget {
   const UserLoginScreen({super.key});
@@ -15,7 +21,8 @@ class UserLoginScreen extends StatefulWidget {
 class _UserLoginScreenState extends State<UserLoginScreen> {
   late String email, password;
   String? emailError, passwordError;
-  bool showPassword = false; // Variable to toggle password visibility
+  bool showPassword = false;
+  bool isLoading = false; // To show a loading indicator
 
   @override
   void initState() {
@@ -33,13 +40,10 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
 
   bool validate() {
     resetErrorText();
-
-    // Email validation
     RegExp emailExp = RegExp(
-        r"^[a-zAZ0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?)*$");
+        r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?)*$");
     bool isValid = true;
 
-    // Validate email
     if (email.isEmpty || !emailExp.hasMatch(email)) {
       setState(() {
         emailError = 'Email is invalid';
@@ -47,7 +51,6 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
       isValid = false;
     }
 
-    // Validate password
     if (password.isEmpty || password.length < 8) {
       setState(() {
         passwordError = 'Password must be at least 8 characters';
@@ -58,11 +61,55 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
     return isValid;
   }
 
-  void submit() {
-    if (validate()) {
-      // Handle the login logic (e.g., send the credentials to the backend)
-      print('Email: $email, Password: $password');
-      Navigator.push(context, MaterialPageRoute(builder: (context) => UserHome()));
+  Future<void> login() async {
+    if (!validate()) return;
+
+    setState(() {
+      isLoading = true;
+    });
+
+    const String apiUrl = "$baseUrl/api/login"; // Replace with your actual API URL
+
+    try {
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "email": email,
+          "password": password,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setString("access_token", data["access"]);
+        await prefs.setString("refresh_token", data["refresh"]);
+        await prefs.setString("user_role", data["role"]);
+
+        // Navigate based on role
+        if (data["role"] == "admin") {
+          Navigator.pushReplacementNamed(context, "/adminHome");
+        } else if (data["role"] == "instructor") {
+          Navigator.pushReplacementNamed(context, "/instructorHome");
+        } else {
+          Navigator.pushReplacementNamed(context, "/userHome");
+        }
+      } else {
+        final errorData = jsonDecode(response.body);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorData["detail"] ?? "Login failed")),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error connecting to server")),
+      );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
@@ -79,109 +126,62 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
               SizedBox(height: screenHeight * .12),
               const Text(
                 'Welcome',
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
+                style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.black),
               ),
               SizedBox(height: screenHeight * .01),
               Text(
                 'Sign in to continue',
-                style: TextStyle(
-                  fontSize: 18,
-                  color: Colors.black.withOpacity(0.7),
-                ),
+                style: TextStyle(fontSize: 18, color: Colors.black.withOpacity(0.7)),
               ),
               SizedBox(height: screenHeight * .12),
 
-              // Email TextField
               InputField(
                 labelText: 'Email',
                 errorText: emailError,
-                onChanged: (value) {
-                  setState(() {
-                    email = value;
-                    if (emailError != null) emailError = null;  // Clear error when user types
-                  });
-                },
+                onChanged: (value) => setState(() => email = value),
                 keyboardType: TextInputType.emailAddress,
                 textInputAction: TextInputAction.next,
                 autoFocus: true,
               ),
               SizedBox(height: screenHeight * .025),
 
-              // Password TextField with Show Password functionality
               InputField(
                 labelText: 'Password',
                 errorText: passwordError,
-                obscureText: !showPassword, // Show or hide password based on `showPassword`
-                onChanged: (value) {
-                  setState(() {
-                    password = value;
-                    if (passwordError != null) passwordError = null;  // Clear error when user types
-                  });
-                },
-                onSubmitted: (val) => submit(),
+                obscureText: !showPassword,
+                onChanged: (value) => setState(() => password = value),
+                onSubmitted: (_) => login(),
                 textInputAction: TextInputAction.done,
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    showPassword ? Icons.visibility : Icons.visibility_off,
-                    color: Colors.black,
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      showPassword = !showPassword; // Toggle password visibility
-                    });
-                  },
-                ),
+
               ),
               SizedBox(height: screenHeight * .03),
 
-              // Forgot Password Button
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
-                  onPressed: () {
-                    // Navigate to ForgotPasswordScreen
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => ForgotPasswordScreen()),
-                    );
-                  },
-                  child: const Text(
-                    'Forgot Password?',
-                    style: TextStyle(color: Colors.black),
-                  ),
+                  onPressed: () => Navigator.pushNamed(context, "/forgotPassword"),
+                  child: const Text('Forgot Password?', style: TextStyle(color: Colors.black)),
                 ),
               ),
 
-              // Login Button
-              FormButton(
-                text: 'Log In',
-                onPressed: submit,
-              ),
-              SizedBox(height: screenHeight * .15), // SizedBox for space
+              isLoading
+                  ? const CircularProgressIndicator()
+                  : FormButton(text: 'Log In', onPressed: login),
+              SizedBox(height: screenHeight * .15),
 
-              // Sign Up Link
               TextButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => AdminApp()),
-                  ); // Navigate to registration screen
-                },
+                onPressed: () =>     Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => AdminApp()),
+                ),
                 child: RichText(
                   text: const TextSpan(
                     text: "Not a user, ",
                     style: TextStyle(color: Colors.black),
                     children: [
                       TextSpan(
-                        text: 'Login',
-                        style: TextStyle(
-                          color: Color.fromARGB(255, 3, 6, 148),
-                          fontWeight: FontWeight.bold,
-                        ),
+                        text: 'Sign Up',
+                        style: TextStyle(color: Color.fromARGB(255, 3, 6, 148), fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
@@ -195,82 +195,3 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
   }
 }
 
-// Updated InputField widget to support suffixIcon for Show/Hide Password
-class InputField extends StatelessWidget {
-  final String? labelText;
-  final String? errorText;
-  final Function(String)? onChanged;
-  final Function(String)? onSubmitted;
-  final TextInputType? keyboardType;
-  final TextInputAction? textInputAction;
-  final bool autoFocus;
-  final bool obscureText;
-  final Widget? suffixIcon; // Add suffixIcon to support Show/Hide password
-
-  const InputField({
-    this.labelText,
-    this.errorText,
-    this.onChanged,
-    this.onSubmitted,
-    this.keyboardType,
-    this.textInputAction,
-    this.autoFocus = false,
-    this.obscureText = false,
-    this.suffixIcon, // Accept suffixIcon as parameter
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return TextField(
-      autofocus: autoFocus,
-      onChanged: onChanged,
-      onSubmitted: onSubmitted,
-      keyboardType: keyboardType,
-      textInputAction: textInputAction,
-      obscureText: obscureText,
-      decoration: InputDecoration(
-        labelText: labelText,
-        errorText: errorText,
-        floatingLabelBehavior: FloatingLabelBehavior.always,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        filled: true,
-        fillColor: Colors.grey[200],
-        suffixIcon: suffixIcon, // Set suffixIcon here
-      ),
-    );
-  }
-}
-
-// Form Button Widget
-class FormButton extends StatelessWidget {
-  final String text;
-  final Function? onPressed;
-
-  const FormButton({this.text = '', this.onPressed, super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    double screenHeight = MediaQuery.of(context).size.height;
-
-    return ElevatedButton(
-      onPressed: onPressed as void Function()?,
-      style: ElevatedButton.styleFrom(
-        padding: EdgeInsets.symmetric(vertical: screenHeight * .02),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-        backgroundColor: const Color.fromARGB(255, 3, 6, 148), // Button background color
-      ),
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontSize: 16,
-          color: Colors.white, // Set text color to white
-        ),
-      ),
-    );
-  }
-}
