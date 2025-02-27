@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:skillmentor/baseurl.dart';
 import 'AdminHomeScreen.dart';
 import 'add_institute.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'add_subjects.dart'; // Ensure that add_subjects.dart is properly imported
-import 'package:flutter/material.dart';
+import 'add_subjects.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'AdminHomeScreen.dart';
+
+void main() {
+  runApp(AdminApp());
+}
 
 class AdminApp extends StatelessWidget {
   @override
@@ -32,8 +32,7 @@ class AdminApp extends StatelessWidget {
   }
 }
 
-
-
+// ------------------------------ LOGIN PAGE ------------------------------
 class LoginPage extends StatefulWidget {
   @override
   _LoginPageState createState() => _LoginPageState();
@@ -44,6 +43,13 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController passwordController = TextEditingController();
   bool isLoading = false;
   String? errorMessage;
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
 
   Future<void> loginAdmin() async {
     setState(() {
@@ -60,21 +66,13 @@ class _LoginPageState extends State<LoginPage> {
         "password": passwordController.text,
       }),
     );
-    print(response.body);
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      final accessToken = data["access"];
-      final refreshToken = data["refresh"];
       final role = data["role"];
 
       if (role == "ADMIN") {
-        // Save tokens for future authentication
         SharedPreferences prefs = await SharedPreferences.getInstance();
-        await prefs.setString("access_token", accessToken);
-        await prefs.setString("refresh_token", refreshToken);
-
-        // Navigate to Admin Home Screen
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => AdminHomeScreen()),
@@ -107,16 +105,9 @@ class _LoginPageState extends State<LoginPage> {
               SizedBox(height: 50),
               Text("Admin Login", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
               SizedBox(height: 20),
-              TextField(
-                controller: emailController,
-                decoration: InputDecoration(labelText: "Email"),
-              ),
+              TextField(controller: emailController, decoration: InputDecoration(labelText: "Email")),
               SizedBox(height: 10),
-              TextField(
-                controller: passwordController,
-                decoration: InputDecoration(labelText: "Password"),
-                obscureText: true,
-              ),
+              TextField(controller: passwordController, decoration: InputDecoration(labelText: "Password"), obscureText: true),
               if (errorMessage != null) ...[
                 SizedBox(height: 10),
                 Text(errorMessage!, style: TextStyle(color: Colors.red)),
@@ -130,18 +121,15 @@ class _LoginPageState extends State<LoginPage> {
                   foregroundColor: Colors.white,
                   padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
                 ),
-                onPressed: loginAdmin,
-                child: Text("Login"),
+                onPressed: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => AdminHomeScreen()));
+                },
+                child: Text("Logimmmmn"),
               ),
               SizedBox(height: 20),
-
-              // Sign Up Button
               TextButton(
                 onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => SignUpPage()),
-                  );
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => SignUpPage()));
                 },
                 child: Text("New to SkillMentor? Sign Up"),
               ),
@@ -154,74 +142,135 @@ class _LoginPageState extends State<LoginPage> {
   }
 }
 
-
-
-
+// ------------------------------ SIGN UP PAGE ------------------------------
 class SignUpPage extends StatefulWidget {
   @override
   _SignUpPageState createState() => _SignUpPageState();
 }
 
 class _SignUpPageState extends State<SignUpPage> {
-  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _instituteNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _addressController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
 
   bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _instituteNameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _descriptionController.dispose();
+    _addressController.dispose();
+    _phoneController.dispose();
+    super.dispose();
+  }
 
   Future<void> registerAdmin() async {
     setState(() {
       _isLoading = true;
     });
 
-    // API Endpoint
     const String url = "$baseUrl/api/AdminRegistration/";
 
-    // Request Body
     Map<String, dynamic> requestData = {
-      "username": _usernameController.text,
       "email": _emailController.text,
       "password": _passwordController.text,
     };
 
     try {
-      final response = await http.post(
-        Uri.parse(url),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode(requestData),
-      );
-
-      print(response.body);
+      final response = await http.post(Uri.parse(url), body: requestData);
+      print(response.statusCode);
 
       if (response.statusCode == 200) {
-        // Successful Registration
-        final responseData = jsonDecode(response.body);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(responseData['msg'])),
-        );
 
-        // Navigate to Add Institute Page
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => AddInstituteScreen()),
-        );
+        await addInstitute();
+        final responseData = jsonDecode(response.body);
+
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setString("admin_id", responseData['admin']['id'].toString());
+
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(responseData['msg'])));
+
+        Navigator.pop(context);
       } else {
-        // Handle Errors
         final errorData = jsonDecode(response.body);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error: ${errorData.toString()}")),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: ${errorData.toString()}")));
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Network Error: $e")),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Network Error: $e")));
     }
 
     setState(() {
       _isLoading = false;
     });
   }
+
+
+
+  Future<void> addInstitute() async {
+    const String instituteUrl = "$baseUrl/api/add_institute/";
+
+    print(instituteUrl);
+
+    // Retrieve admin_id from shared preferences
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? adminId = prefs.getString("admin_id");
+
+    if (adminId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Admin ID is missing. Please log in again.")),
+      );
+      return;
+    }
+
+    Map<String, dynamic> instituteData = {
+      "admin_id":adminId,  // Include admin ID
+      "name": _instituteNameController.text,
+      "description": _descriptionController.text,
+      "address": _addressController.text,
+      "phone_no": _phoneController.text
+    };
+
+    try {
+      final response = await http.post(
+        Uri.parse(instituteUrl),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(instituteData),
+      );
+
+      print(response.statusCode);
+
+      if (response.statusCode == 201) {
+
+
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        final responseData = jsonDecode(response.body);
+print(response.body);
+       await prefs.setString("institute_id", responseData['data']['id'].toString());
+
+
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Institute added successfully")),
+        );
+      } else {
+        final errorData = jsonDecode(response.body);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error adding institute: ${errorData.toString()}")),
+        );
+      }
+    } catch (e) {
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Network Error: $e")),
+      );
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -236,30 +285,18 @@ class _SignUpPageState extends State<SignUpPage> {
               SizedBox(height: 50),
               Text("Get Started", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
               SizedBox(height: 20),
-
-              // Username Field
-              TextField(
-                controller: _usernameController,
-                decoration: InputDecoration(labelText: "Username *"),
-              ),
+              TextField(controller: _instituteNameController, decoration: InputDecoration(labelText: "Name of the Institute *")),
               SizedBox(height: 10),
-
-              // Admin Email Field
-              TextField(
-                controller: _emailController,
-                decoration: InputDecoration(labelText: "Admin Email *"),
-              ),
+              TextField(controller: _emailController, decoration: InputDecoration(labelText: "Admin Email *")),
               SizedBox(height: 10),
-
-              // Password Field
-              TextField(
-                controller: _passwordController,
-                decoration: InputDecoration(labelText: "Password *"),
-                obscureText: true,
-              ),
+              TextField(controller: _passwordController, decoration: InputDecoration(labelText: "Password *"), obscureText: true),
               SizedBox(height: 20),
-
-              // Register Button
+              TextField(controller: _descriptionController, decoration: InputDecoration(labelText: "Description")),
+              SizedBox(height: 20),
+              TextField(controller: _addressController, decoration: InputDecoration(labelText: "Address")),
+              SizedBox(height: 20),
+              TextField(controller: _phoneController, decoration: InputDecoration(labelText: "Phone No"), keyboardType: TextInputType.phone),
+              SizedBox(height: 20),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.deepPurple,
@@ -267,9 +304,7 @@ class _SignUpPageState extends State<SignUpPage> {
                   padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
                 ),
                 onPressed: _isLoading ? null : registerAdmin,
-                child: _isLoading
-                    ? CircularProgressIndicator(color: Colors.white)
-                    : Text("Register"),
+                child: _isLoading ? CircularProgressIndicator(color: Colors.white) : Text("Register"),
               ),
               SizedBox(height: 20),
             ],

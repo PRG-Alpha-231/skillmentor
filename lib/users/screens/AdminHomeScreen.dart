@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'add_departments.dart';
 import 'add_instructor.dart';
 import 'add_subjects.dart';
 
@@ -11,9 +12,9 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   int _currentIndex = 0;
 
   final List<Widget> _screens = [
-    HomeScreen(),
-    SubjectsScreen(),
-    InstructorsScreen(),
+    AddDepartments(),
+    AddSubjectScreen(),
+    AddInstructorScreen(),
     UsersScreen(),
     ProfileScreen(),
   ];
@@ -21,10 +22,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Admin Dashboard'),
-        backgroundColor: Colors.deepPurple,
-      ),
+
       body: _screens[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
@@ -37,7 +35,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
         selectedItemColor: Colors.deepPurple,
         unselectedItemColor: Colors.grey,
         items: [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.local_post_office), label: 'Departments'),
           BottomNavigationBarItem(icon: Icon(Icons.book), label: 'Subjects'),
           BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Instructors'),
           BottomNavigationBarItem(icon: Icon(Icons.group), label: 'Users'),
@@ -55,15 +53,7 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-class SubjectsScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Subjects')),
-      body: Center(child: Text('Subjects Screen')),
-    );
-  }
-}
+
 
 class InstructorsScreen extends StatelessWidget {
   @override
