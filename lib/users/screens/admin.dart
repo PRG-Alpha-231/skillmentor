@@ -134,6 +134,18 @@ class _LoginPageState extends State<LoginPage> {
                 child: Text("Login"),
               ),
               SizedBox(height: 20),
+
+              // Sign Up Button
+              TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => SignUpPage()),
+                  );
+                },
+                child: Text("New to SkillMentor? Sign Up"),
+              ),
+              SizedBox(height: 20),
             ],
           ),
         ),
@@ -141,6 +153,7 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 }
+
 
 
 
