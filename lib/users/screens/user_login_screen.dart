@@ -166,7 +166,7 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
 
               isLoading
                   ? const CircularProgressIndicator()
-                  : FormButton(text: 'Log In', onPressed: login),
+                  : FormButton(text: 'Login', onPressed: login),
               SizedBox(height: screenHeight * .15),
 
               TextButton(

@@ -1,4 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:skillmentor/baseurl.dart';
 import 'AdminHomeScreen.dart';
 
 class AddInstructorScreen extends StatefulWidget {
@@ -10,138 +13,87 @@ class _AddInstructorScreenState extends State<AddInstructorScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _instructorNameController = TextEditingController();
   final TextEditingController _instructorEmailController = TextEditingController();
+
   String? _selectedSubject;
+  String _qualification = '';
+  List<Map<String, dynamic>> subjects = [];
 
-  List<Map<String, String>> instructors = []; // List to hold the instructors
+  @override
+  void initState() {
+    super.initState();
+    _fetchSubjects();
+  }
 
-  List<String> subjects = ['Math', 'Science', 'English', 'History']; // Example subjects
-
-  // Function to add an instructor
-  void _addInstructor() {
-    if (_formKey.currentState?.validate() ?? false) {
-      setState(() {
-        instructors.add({
-          'name': _instructorNameController.text.trim(),
-          'email': _instructorEmailController.text.trim(),
-          'subject': _selectedSubject ?? '',
+  Future<void> _fetchSubjects() async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/api/subjects/'));
+      if (response.statusCode == 200) {
+        List<Map<String, dynamic>> subjectsData = List<Map<String, dynamic>>.from(json.decode(response.body));
+        setState(() {
+          subjects = subjectsData;
         });
-      });
-
-      // Clear input fields
-      _instructorNameController.clear();
-      _instructorEmailController.clear();
-      _selectedSubject = null;
+      }
+    } catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error loading subjects: $error')));
     }
   }
 
-  // Function to edit an instructor
-  void _editInstructor(int index) {
-    final instructor = instructors[index];
+  void _addInstructor() async {
+    if (_formKey.currentState?.validate() ?? false) {
+      final Map<String, dynamic> instructorData = {
+        'role': 'Instructor',
+        'email': _instructorEmailController.text.trim(),
+        'name': _instructorNameController.text.trim(),
+        'subjects': _selectedSubject,
+        'qualification': _qualification,
+      };
 
-    _instructorNameController.text = instructor['name'] ?? '';
-    _instructorEmailController.text = instructor['email'] ?? '';
-    _selectedSubject = instructor['subject'];
+      try {
+        final response = await http.post(
+          Uri.parse('$baseUrl/api/AdminAddInstructor'),
+          headers: {'Content-Type': 'application/json'},
+          body: json.encode(instructorData),
+        );
 
-    setState(() {
-      instructors.removeAt(index); // Remove from list before editing
-    });
-  }
-
-  // Function to delete an instructor
-  void _deleteInstructor(int index) {
-    setState(() {
-      instructors.removeAt(index);
-    });
-  }
-
-  // Function to navigate to the Admin Home Screen
-  void _navigateToNext() {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => AdminHomeScreen()),
-    );
+        if (response.statusCode == 201) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Instructor added successfully! Credentials sent via email.')));
+          _instructorNameController.clear();
+          _instructorEmailController.clear();
+          setState(() {
+            _selectedSubject = null;
+            _qualification = '';
+          });
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to add instructor.')));
+        }
+      } catch (error) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $error')));
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Add New Instructor'),
-        backgroundColor: Colors.deepPurple,
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Form(
-                      key: _formKey,
-                      child: Column(
-                        children: [
-                          _buildTextField(_instructorNameController, 'Instructor Name', Icons.person, true),
-                          _buildTextField(_instructorEmailController, 'Instructor Email', Icons.email, true),
-                          _buildDropdownField('Subject', _selectedSubject, subjects),
-                          SizedBox(height: 20),
-                          ElevatedButton(
-                            onPressed: _addInstructor,
-                            child: Text('Add Instructor'),
-                          ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(height: 20),
-                    ListView.builder(
-                      shrinkWrap: true,
-                      physics: NeverScrollableScrollPhysics(),
-                      itemCount: instructors.length,
-                      itemBuilder: (context, index) {
-                        final instructor = instructors[index];
-                        return Card(
-                          margin: EdgeInsets.symmetric(vertical: 8),
-                          child: ListTile(
-                            title: Text(instructor['name'] ?? ''),
-                            subtitle: Text('Email: ${instructor['email']} \nSubject: ${instructor['subject']}'),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  icon: Icon(Icons.edit, color: Colors.blueAccent),
-                                  onPressed: () => _editInstructor(index),
-                                ),
-                                IconButton(
-                                  icon: Icon(Icons.delete, color: Colors.redAccent),
-                                  onPressed: () => _deleteInstructor(index),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
+      appBar: AppBar(title: Text('Add New Instructor'), backgroundColor: Colors.deepPurple),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              _buildTextField(_instructorNameController, 'Instructor Name', Icons.person, true),
+              _buildTextField(_instructorEmailController, 'Instructor Email', Icons.email, true),
+              _buildDropdownField('Subject', _selectedSubject, subjects, (value) => _selectedSubject = value),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _addInstructor,
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurpleAccent),
+                child: Text('Add Instructor', style: TextStyle(color: Colors.white, fontSize: 18)),
               ),
-            ),
+            ],
           ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _navigateToNext,
-                child: Text('Next'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.deepPurple,
-                  foregroundColor: Colors.white,
-                ),
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -161,26 +113,22 @@ class _AddInstructorScreenState extends State<AddInstructorScreen> {
     );
   }
 
-  Widget _buildDropdownField(String label, String? value, List<String> options) {
+  Widget _buildDropdownField(String label, String? value, List<Map<String, dynamic>> items, Function(String?) onChanged) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: DropdownButtonFormField<String>(
         value: value,
         hint: Text('Select $label'),
-        onChanged: (newValue) {
-          setState(() {
-            _selectedSubject = newValue;
-          });
-        },
-        items: options.map((subject) {
+        onChanged: onChanged,
+        items: items.map((item) {
           return DropdownMenuItem<String>(
-            value: subject,
-            child: Text(subject),
+            value: item['id'].toString(),
+            child: Text(item['name'] ?? item['subject_name']),
           );
         }).toList(),
         decoration: InputDecoration(
           labelText: label,
-          prefixIcon: Icon(Icons.subject, color: Colors.deepPurpleAccent),
+          prefixIcon: Icon(Icons.business, color: Colors.deepPurpleAccent),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         ),
         validator: (value) => value == null ? 'Please select a $label' : null,

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'add_departments.dart';
 import 'add_instructor.dart';
 import 'add_subjects.dart';
+import 'admin_profile.dart';
+import 'admin_users.dart';
 
 class AdminHomeScreen extends StatefulWidget {
   @override
@@ -15,8 +17,8 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     AddDepartments(),
     AddSubjectScreen(),
     AddInstructorScreen(),
-    UsersScreen(),
-    ProfileScreen(),
+    AdminUsersPage(),
+    AdminProfileScreen(),
   ];
 
   @override
@@ -35,10 +37,10 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
         selectedItemColor: Colors.deepPurple,
         unselectedItemColor: Colors.grey,
         items: [
-          BottomNavigationBarItem(icon: Icon(Icons.local_post_office), label: 'Departments'),
+          BottomNavigationBarItem(icon: Icon(Icons.business), label: 'Departments'),
           BottomNavigationBarItem(icon: Icon(Icons.book), label: 'Subjects'),
           BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Instructors'),
-          BottomNavigationBarItem(icon: Icon(Icons.group), label: 'Users'),
+          BottomNavigationBarItem(icon: Icon(Icons.people_alt), label: 'Users'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
       ),

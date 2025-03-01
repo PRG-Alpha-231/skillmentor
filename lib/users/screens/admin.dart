@@ -7,9 +7,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
-void main() {
-  runApp(AdminApp());
-}
+
 
 class AdminApp extends StatelessWidget {
   @override
@@ -124,7 +122,7 @@ class _LoginPageState extends State<LoginPage> {
                 onPressed: () {
                   Navigator.push(context, MaterialPageRoute(builder: (context) => AdminHomeScreen()));
                 },
-                child: Text("Logimmmmn"),
+                child: Text("Login"),
               ),
               SizedBox(height: 20),
               TextButton(

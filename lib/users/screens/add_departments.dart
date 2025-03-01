@@ -3,7 +3,6 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:skillmentor/baseurl.dart';
-
 import 'add_subjects.dart';
 
 class AddDepartments extends StatefulWidget {
@@ -72,9 +71,81 @@ class _AddDepartmentsState extends State<AddDepartments> {
                     _buildTextField(_departmentNameController, 'Department Name', Icons.business, true),
                     _buildTextField(_departmentDescriptionController, 'Description', Icons.description, false, maxLines: 3),
                     SizedBox(height: 20),
-                    ElevatedButton(
-                      onPressed: _addDepartment, // Call API when clicked
-                      child: Text('Add Department'),
+                    // Updated Add Department Button with Gradient Style
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: Container(
+                          height: 50,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            gradient: LinearGradient(
+                              colors: [Colors.deepPurple, Colors.deepPurpleAccent],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                          ),
+                          child: ElevatedButton(
+                            onPressed: _addDepartment, // Call API when clicked
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
+                              padding: EdgeInsets.zero, // Removing padding for the gradient to show
+                            ),
+                            child: Text(
+                              'Add Department',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 20),
+                    // Next Button to Navigate to AddSubjectsScreen
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: Container(
+                          height: 50,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            gradient: LinearGradient(
+                              colors: [Colors.deepPurple, Colors.deepPurple],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                          ),
+                          child: ElevatedButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => AddSubjectScreen(), // Navigate to AddSubjectsScreen
+                                ),
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
+                              padding: EdgeInsets.zero,
+                            ),
+                            child: Text(
+                              'Next',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),

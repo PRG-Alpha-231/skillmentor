@@ -3,7 +3,6 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:skillmentor/baseurl.dart';
 import 'dart:convert';
-
 import 'add_instructor.dart';
 
 class AddSubjectScreen extends StatefulWidget {
@@ -29,7 +28,7 @@ class _AddSubjectScreenState extends State<AddSubjectScreen> {
     _fetchSubjects();
   }
 
-  /// Fetch departments from the backend
+  // Fetch departments from the backend
   Future<void> _fetchDepartments() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     final instituteId = prefs.getString('institute_id');
@@ -58,7 +57,7 @@ class _AddSubjectScreenState extends State<AddSubjectScreen> {
     }
   }
 
-  /// Fetch subjects from the backend
+  // Fetch subjects from the backend
   Future<void> _fetchSubjects() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     final instituteId = prefs.getString('institute_id');
@@ -70,7 +69,6 @@ class _AddSubjectScreenState extends State<AddSubjectScreen> {
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         setState(() {
-
           subjects = data.map((subject) => {
             'id': subject['id'].toString(),
             'name': subject['subject_name'],
@@ -86,7 +84,7 @@ class _AddSubjectScreenState extends State<AddSubjectScreen> {
     }
   }
 
-  /// Add a subject to the backend
+  // Add a subject to the backend
   Future<void> _addSubject() async {
     if (_formKey.currentState?.validate() ?? false) {
       if (selectedDepartmentId == null) {
@@ -116,8 +114,10 @@ class _AddSubjectScreenState extends State<AddSubjectScreen> {
         );
 
         if (response.statusCode == 201) {
+          final newSubjectData = json.decode(response.body);
           setState(() {
             subjects.add({
+              'id': newSubjectData['id'].toString(),
               'name': _subjectNameController.text.trim(),
               'code': selectedDepartmentId!,
               'description': _subjectDescriptionController.text.trim(),
@@ -128,16 +128,25 @@ class _AddSubjectScreenState extends State<AddSubjectScreen> {
           _subjectDescriptionController.clear();
           selectedDepartmentId = null;
           selectedDepartmentName = null;
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Subject added successfully')),
+          );
         } else {
-          print('Failed to add subject: ${response.body}');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to add subject: ${response.body}')),
+          );
         }
       } catch (e) {
         print('Error adding subject: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error adding subject: $e')),
+        );
       }
     }
   }
 
-  /// Delete a subject from the backend
+  // Delete a subject from the backend
   Future<void> _deleteSubject(int index) async {
     String subjectId = subjects[index]['id'];
     final String apiUrl = '$baseUrl/api/subjects/$subjectId/';
@@ -195,7 +204,6 @@ class _AddSubjectScreenState extends State<AddSubjectScreen> {
                                 selectedDepartmentId = dept['id'];
                                 selectedDepartmentName = dept['name'];
                               });
-
                             },
                           );
                         }).toList(),
@@ -206,9 +214,39 @@ class _AddSubjectScreenState extends State<AddSubjectScreen> {
                   _buildTextField(_subjectDescriptionController, 'Description', Icons.description, false, maxLines: 3),
                   SizedBox(height: 20),
 
-                  ElevatedButton(
-                    onPressed: _addSubject,
-                    child: Text('Add Subject'),
+                  // Add Subject Button with Gradient Style
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: Container(
+                        height: 50,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          gradient: LinearGradient(
+                            colors: [Colors.deepPurpleAccent, Colors.deepPurple],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                        ),
+                        child: ElevatedButton(
+                          onPressed: _addSubject,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            padding: EdgeInsets.zero, // Removing padding for the gradient to show
+                          ),
+                          child: Text(
+                            'Add Subject',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -243,12 +281,47 @@ class _AddSubjectScreenState extends State<AddSubjectScreen> {
                 : Center(child: Text('No subjects added yet.', style: TextStyle(color: Colors.grey))),
 
             SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => AddInstructorScreen()));
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurple, foregroundColor: Colors.white),
-              child: Text('Next'),
+            // Next Button with Gradient Style
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: SizedBox(
+                width: double.infinity,
+                child: Container(
+                  height: 50,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    gradient: LinearGradient(
+                      colors: [Colors.deepPurpleAccent, Colors.deepPurple],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                  ),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      // Pass the subjects to AddInstructorScreen
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AddInstructorScreen(), // Passing subjects here
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      shadowColor: Colors.transparent,
+                      padding: EdgeInsets.zero, // Removing padding for the gradient to show
+                    ),
+                    child: Text(
+                      'Next',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ),
           ],
         ),
@@ -262,9 +335,15 @@ class _AddSubjectScreenState extends State<AddSubjectScreen> {
       child: TextFormField(
         controller: controller,
         maxLines: maxLines,
+        validator: (value) {
+          if (isRequired && (value == null || value.isEmpty)) {
+            return '$label is required';
+          }
+          return null;
+        },
         decoration: InputDecoration(
           labelText: label,
-          prefixIcon: Icon(icon, color: Colors.deepPurpleAccent),
+          prefixIcon: Icon(icon),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
