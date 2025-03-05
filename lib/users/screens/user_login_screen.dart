@@ -93,7 +93,11 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
         if (data["role"] == "admin") {
           Navigator.pushReplacementNamed(context, "/adminHome");
         } else if (data["role"] == "Instructor") {
-          Navigator.pushAndRemoveUntil(context,MaterialPageRoute(builder: (context) =>  InstructorHomeScreen(),) , (route) => false,);
+          print('lllll');
+        await prefs.setString("instructor_id", data["instructor_id"].toString());
+
+         
+         Navigator.pushAndRemoveUntil(context,MaterialPageRoute(builder: (context) =>  InstructorHomeScreen(),) , (route) => false,);
         } else {
           Navigator.pushReplacementNamed(context, "/userHome");
         }

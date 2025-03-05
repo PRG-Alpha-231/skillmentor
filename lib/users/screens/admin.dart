@@ -67,10 +67,13 @@ class _LoginPageState extends State<LoginPage> {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
+      print(data);
       SharedPreferences pref =  await SharedPreferences.getInstance();
       await pref.setString("token", data["access"]);
       
       final role = data["role"];
+
+      
 
       if (role == "Admin") {
         SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -190,6 +193,7 @@ class _SignUpPageState extends State<SignUpPage> {
 
         await addInstitute();
         final responseData = jsonDecode(response.body);
+        print(responseData);
 
         SharedPreferences prefs = await SharedPreferences.getInstance();
         await prefs.setString("admin_id", responseData['admin']['id'].toString());

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:skillmentor/admin/admin_profile_screen.dart';
 import 'package:skillmentor/instructor/all_instructores_view.dart';
+import 'package:skillmentor/instructor/instructor_add_student.dart';
+import 'package:skillmentor/instructor/profile_list_screen.dart';
 import 'add_departments.dart';
 import 'add_instructor.dart';
 import 'add_subjects.dart';
@@ -17,11 +20,12 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     AddDepartments(),
     AddSubjectScreen(),
     InstructorListScreen(),
-    Scaffold(),
-    Scaffold(),
+    ProfileListScreen(),
+    AdminProfileScreen(),
   ];
 
   @override
+
   Widget build(BuildContext context) {
     return Scaffold(
 

@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-import 'package:skillmentor/baseurl.dart'; // Replace with your base URL
+import 'package:skillmentor/baseurl.dart';
+import 'package:skillmentor/instructor/instructor_add_student.dart'; // Replace with your base URL
 
 class ProfileListScreen extends StatefulWidget {
   @override
@@ -20,7 +21,8 @@ class _ProfileListScreenState extends State<ProfileListScreen> {
 
     try {
       // Fetch profiles with the role "User"
-      final url = Uri.parse('$baseUrl/profiles/?role=User');
+      final url = Uri.parse('$baseUrl/api/profiles/?role=User');
+      print(url);
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
@@ -87,14 +89,15 @@ class _ProfileListScreenState extends State<ProfileListScreen> {
                           'Role: ${profile['role'] ?? 'No Role'}',
                           style: TextStyle(fontSize: 14, color: Colors.grey),
                         ),
-                        trailing: Icon(Icons.arrow_forward_ios, size: 16, color: Colors.blueAccent),
-                        onTap: () {
-                          // Handle profile tap (e.g., navigate to details screen)
-                        },
+                        // trailing: Icon(Icons.arrow_forward_ios, size: 16, color: Colors.blueAccent),
+                        // onTap: () {
+                        //   // Handle profile tap (e.g., navigate to details screen)
+                        // },
                       ),
                     );
                   },
                 ),
+     
     );
   }
 }

@@ -43,9 +43,11 @@ class _InstructorMaterialsScreenState extends State<InstructorMaterialsScreen> {
         setState(() {
           materials.clear();
           materials.addAll(data.map<Map<String, String>>((item) => {
+                'id': item['id'].toString(), // Add material ID
                 'title': item['name'] as String,
                 'type': item['category'] as String,
                 'url': item['file'] as String,
+                'description': item['description'] ?? 'ss', // Add description
               }));
         });
       } else {
@@ -72,7 +74,7 @@ class _InstructorMaterialsScreenState extends State<InstructorMaterialsScreen> {
         final List<dynamic> data = json.decode(response.body);
 
         print(data);
-        
+
         setState(() {
           subjects = data.map<Map<String, dynamic>>((subject) => {
                 'id': subject['id'] as int,
@@ -273,6 +275,144 @@ class _InstructorMaterialsScreenState extends State<InstructorMaterialsScreen> {
     }
   }
 
+  Future<void> _updateMaterial(String materialId, Map<String, String> updatedData) async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse('$baseUrl/update_materials/?materials_id=$materialId'),
+      );
+
+      // Add updated fields
+      request.fields['name'] = updatedData['title']!;
+      request.fields['description'] = updatedData['description']!;
+      request.fields['category'] = updatedData['type']!;
+
+      // Send the request
+      var response = await request.send();
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Material updated successfully')),
+        );
+        _fetchMaterials(); // Refresh the materials list
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update material')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _deleteMaterial(String materialId) async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      var response = await http.delete(
+        Uri.parse('$baseUrl/update_materials/?materials_id=$materialId'),
+      );
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Material deleted successfully')),
+        );
+        _fetchMaterials(); // Refresh the materials list
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to delete material')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _showUpdateMaterialDialog(Map<String, String> material) async {
+    final TextEditingController nameController = TextEditingController(text: material['title']);
+    final TextEditingController descriptionController = TextEditingController(text: material['description']);
+    final TextEditingController categoryController = TextEditingController(text: material['type']);
+
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Update Material'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: InputDecoration(
+                    labelText: 'Name',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                SizedBox(height: 10),
+                TextField(
+                  controller: descriptionController,
+                  decoration: InputDecoration(
+                    labelText: 'Description',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                SizedBox(height: 10),
+                TextField(
+                  controller: categoryController,
+                  decoration: InputDecoration(
+                    labelText: 'Category',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              child: Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text('Update'),
+              onPressed: () async {
+                Navigator.of(context).pop();
+                await _updateMaterial(
+                  material['id']!,
+                  {
+                    'title': nameController.text,
+                    'description': descriptionController.text,
+                    'type': categoryController.text,
+                  },
+                );
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -312,7 +452,11 @@ class _InstructorMaterialsScreenState extends State<InstructorMaterialsScreen> {
                   itemCount: materials.length,
                   itemBuilder: (context, index) {
                     final material = materials[index];
-                    return MaterialCard(material: material);
+                    return MaterialCard(
+                      material: material,
+                      onUpdate: () => _showUpdateMaterialDialog(material),
+                      onDelete: () => _deleteMaterial(material['id']!),
+                    );
                   },
                   separatorBuilder: (context, index) => Divider(color: Colors.grey.shade300),
                   physics: BouncingScrollPhysics(), // Smooth scrolling with bounce effect
@@ -327,8 +471,14 @@ class _InstructorMaterialsScreenState extends State<InstructorMaterialsScreen> {
 
 class MaterialCard extends StatelessWidget {
   final Map<String, String> material;
+  final Function onUpdate;
+  final Function onDelete;
 
-  MaterialCard({required this.material});
+  MaterialCard({
+    required this.material,
+    required this.onUpdate,
+    required this.onDelete,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -354,9 +504,25 @@ class MaterialCard extends StatelessWidget {
             fontSize: 14,
           ),
         ),
-        trailing: Icon(
-          Icons.download,
-          color: Colors.blueAccent,
+        trailing: PopupMenuButton<String>(
+          onSelected: (value) {
+            if (value == 'update') {
+              onUpdate();
+            } else if (value == 'delete') {
+              onDelete();
+            }
+          },
+          itemBuilder: (context) => [
+            PopupMenuItem(
+              value: 'update',
+              child: Text('Update'),
+            ),
+            PopupMenuItem(
+              value: 'delete',
+              child: Text('Delete'),
+            ),
+          ],
+          icon: Icon(Icons.more_vert, color: Colors.blueAccent),
         ),
         onTap: () {
           _openMaterial(context, material['url']!);
