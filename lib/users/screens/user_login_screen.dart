@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:skillmentor/baseurl.dart';
+import 'package:skillmentor/users/screens/instructor_home_screen.dart';
 import 'package:skillmentor/users/screens/user_home.dart';
 import 'package:skillmentor/users/screens/user_registration_screen.dart';
 import 'package:skillmentor/users/screens/forgot_password_screen.dart'; //
@@ -51,7 +52,7 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
       isValid = false;
     }
 
-    if (password.isEmpty || password.length < 8) {
+    if (password.isEmpty || password.length < 6) {
       setState(() {
         passwordError = 'Password must be at least 8 characters';
       });
@@ -91,8 +92,8 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
         // Navigate based on role
         if (data["role"] == "admin") {
           Navigator.pushReplacementNamed(context, "/adminHome");
-        } else if (data["role"] == "instructor") {
-          Navigator.pushReplacementNamed(context, "/instructorHome");
+        } else if (data["role"] == "Instructor") {
+          Navigator.pushAndRemoveUntil(context,MaterialPageRoute(builder: (context) =>  InstructorHomeScreen(),) , (route) => false,);
         } else {
           Navigator.pushReplacementNamed(context, "/userHome");
         }

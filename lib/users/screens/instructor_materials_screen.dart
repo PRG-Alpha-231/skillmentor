@@ -1,7 +1,9 @@
-import 'package:flutter/material.dart';
+import 'dart:typed_data';
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:file_picker/file_picker.dart';
+import 'package:skillmentor/baseurl.dart';
 
 class InstructorMaterialsScreen extends StatefulWidget {
   @override
@@ -11,13 +13,83 @@ class InstructorMaterialsScreen extends StatefulWidget {
 class _InstructorMaterialsScreenState extends State<InstructorMaterialsScreen> {
   bool _isLoading = false; // Track loading state
 
-  final List<Map<String, String>> materials = [
-    // Sample data, it will be replaced by the API response
-    {'title': 'Lecture 1 - Introduction to Flutter', 'type': 'PDF', 'url': 'https://example.com/lecture1.pdf'},
-    {'title': 'Lecture 2 - Advanced Flutter', 'type': 'PDF', 'url': 'https://example.com/lecture2.pdf'},
-  ];
+  List<Map<String, String>> materials = []; // List to store fetched materials
+  List<Map<String, dynamic>> subjects = []; // List to store fetched subjects
 
   String _sortBy = 'Title'; // Default sorting by title
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchMaterials(); // Fetch materials
+    _fetchSubjects(); // Fetch subjects
+  }
+
+  Future<void> _fetchMaterials() async {
+    setState(() {
+      _isLoading = true; // Show loading indicator
+    });
+
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/api/materials/'));
+      print(Uri.parse('$baseUrl/api/materials/'));
+
+      if (response.statusCode == 200) {
+        // Parse the JSON response
+        final List<dynamic> data = json.decode(response.body);
+        print(data);
+
+        // Update the materials list
+        setState(() {
+          materials.clear();
+          materials.addAll(data.map<Map<String, String>>((item) => {
+                'title': item['name'] as String,
+                'type': item['category'] as String,
+                'url': item['file'] as String,
+              }));
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to fetch materials')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false; // Hide loading indicator
+      });
+    }
+  }
+
+  Future<void> _fetchSubjects() async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/api/subjects/'));
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+
+        print(data);
+        
+        setState(() {
+          subjects = data.map<Map<String, dynamic>>((subject) => {
+                'id': subject['id'] as int,
+                'name': subject['subject_name'] as String,
+              }).toList();
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to fetch subjects')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
+  }
 
   void _sortMaterials(String criterion) {
     setState(() {
@@ -30,55 +102,174 @@ class _InstructorMaterialsScreenState extends State<InstructorMaterialsScreen> {
     });
   }
 
-  Future<void> _addMaterial() async {
-    // Step 1: Pick a file
+  Future<void> _showAddMaterialDialog() async {
+    // Controllers for text fields
+    final TextEditingController nameController = TextEditingController();
+    final TextEditingController descriptionController = TextEditingController();
+    final TextEditingController categoryController = TextEditingController();
+    String? selectedSubject; // Selected subject from dropdown
+
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Add Material'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: InputDecoration(
+                    labelText: 'Name',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                SizedBox(height: 10),
+                TextField(
+                  controller: descriptionController,
+                  decoration: InputDecoration(
+                    labelText: 'Description',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                SizedBox(height: 10),
+                TextField(
+                  controller: categoryController,
+                  decoration: InputDecoration(
+                    labelText: 'Category',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                SizedBox(height: 10),
+                DropdownButtonFormField<String>(
+                  value: selectedSubject,
+                  decoration: InputDecoration(
+                    labelText: 'Subject',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: subjects.map<DropdownMenuItem<String>>((subject) {
+                    return DropdownMenuItem<String>(
+                      value: subject['id'].toString(),
+                      child: Text(subject['name']),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      selectedSubject = value;
+                    });
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              child: Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text('Add'),
+              onPressed: () async {
+                // Validate inputs
+                if (nameController.text.isEmpty ||
+                    descriptionController.text.isEmpty ||
+                    categoryController.text.isEmpty ||
+                    selectedSubject == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Please fill all fields')),
+                  );
+                  return;
+                }
+
+                // Close the dialog
+                Navigator.of(context).pop();
+
+                // Call the method to add material
+                await _addMaterial(
+                  name: nameController.text,
+                  description: descriptionController.text,
+                  category: categoryController.text,
+                  subjectId: selectedSubject!,
+                );
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _addMaterial({
+    required String name,
+    required String description,
+    required String category,
+    required String subjectId,
+  }) async {
     FilePickerResult? result = await FilePicker.platform.pickFiles();
 
     if (result != null) {
-      // Step 2: Get the selected file and its path
       PlatformFile file = result.files.first;
-      String filePath = file.path ?? '';
+      Uint8List? fileBytes = file.bytes; // Get file bytes directly
+
+      if (fileBytes == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to read file')),
+        );
+        return;
+      }
 
       setState(() {
-        _isLoading = true; // Show loading indicator
+        _isLoading = true;
       });
 
       try {
-        // Step 3: Upload the file to the server
         var request = http.MultipartRequest(
           'POST',
-          Uri.parse('https://401d-117-211-183-204.ngrok-free.app/api/add_materials/'),
+          Uri.parse('$baseUrl/api/add_materials/'),
         );
 
-        // Add the file to the request
-        request.files.add(await http.MultipartFile.fromPath('file', filePath));
+        // Add the file using fromBytes
+        request.files.add(http.MultipartFile.fromBytes(
+          'file', // Field name in the API
+          fileBytes, // File bytes
+          filename: file.name, // File name
+        ));
 
-        // Add other data (if necessary)
-        request.fields['name'] = 'testname';
-        request.fields['email'] = 'admin@gmail.com';
-        request.fields['category'] = 'Materials';
+        // Add other fields
+        request.fields['name'] = name;
+        request.fields['description'] = description;
+        request.fields['category'] = category;
+        request.fields['subject'] = subjectId;
 
         // Send the request
         var response = await request.send();
-        print(response.statusCode);
 
         if (response.statusCode == 201) {
-          // Handle successful API response (e.g., update the materials list)
-          print('Material added successfully');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Material added successfully')),
+          );
+          _fetchMaterials(); // Refresh the materials list after adding
         } else {
-          // Handle error response
-          print('Failed to add material');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to add material')),
+          );
         }
       } catch (e) {
-        print('Error: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
       } finally {
         setState(() {
-          _isLoading = false; // Hide loading indicator
+          _isLoading = false;
         });
       }
     } else {
-      // User canceled the file picking
-      print("File picking canceled");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('File picking canceled')),
+      );
     }
   }
 
@@ -93,7 +284,7 @@ class _InstructorMaterialsScreenState extends State<InstructorMaterialsScreen> {
           PopupMenuButton<String>(
             onSelected: _sortMaterials,
             itemBuilder: (context) {
-              return ['Title', 'Type'].map((sortOption) {
+              return ['Title', 'Type'].map<PopupMenuItem<String>>((sortOption) {
                 return PopupMenuItem<String>(
                   value: sortOption,
                   child: Text(sortOption),
@@ -110,7 +301,7 @@ class _InstructorMaterialsScreenState extends State<InstructorMaterialsScreen> {
         child: Column(
           children: [
             ElevatedButton(
-              onPressed: _addMaterial, // Call _addMaterial when button is pressed
+              onPressed: _showAddMaterialDialog, // Show the pop-up dialog
               child: Text('Add Material'),
             ),
             if (_isLoading) // Show loading indicator while waiting

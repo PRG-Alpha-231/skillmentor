@@ -67,9 +67,12 @@ class _LoginPageState extends State<LoginPage> {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
+      SharedPreferences pref =  await SharedPreferences.getInstance();
+      await pref.setString("token", data["access"]);
+      
       final role = data["role"];
 
-      if (role == "ADMIN") {
+      if (role == "Admin") {
         SharedPreferences prefs = await SharedPreferences.getInstance();
         Navigator.pushReplacement(
           context,
@@ -120,7 +123,7 @@ class _LoginPageState extends State<LoginPage> {
                   padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
                 ),
                 onPressed: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => AdminHomeScreen()));
+                  loginAdmin();
                 },
                 child: Text("Login"),
               ),

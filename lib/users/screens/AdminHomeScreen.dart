@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:skillmentor/instructor/all_instructores_view.dart';
 import 'add_departments.dart';
 import 'add_instructor.dart';
 import 'add_subjects.dart';
-import 'admin_profile.dart';
-import 'admin_users.dart';
+
 
 class AdminHomeScreen extends StatefulWidget {
   @override
@@ -16,9 +16,9 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   final List<Widget> _screens = [
     AddDepartments(),
     AddSubjectScreen(),
-    AddInstructorScreen(),
-    AdminUsersPage(),
-    AdminProfileScreen(),
+    InstructorListScreen(),
+    Scaffold(),
+    Scaffold(),
   ];
 
   @override

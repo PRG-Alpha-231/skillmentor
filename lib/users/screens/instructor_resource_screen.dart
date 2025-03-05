@@ -89,27 +89,7 @@ class InstructorResourceScreen extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 1, // Set to ResourcesScreen as default
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.school), label: 'Resources'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-        ],
-        onTap: (int index) {
-          switch (index) {
-            case 0:
-              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => UserHome()));
-              break;
-            case 1:
-            // Already on ResourcesScreen, no action needed
-              break;
-            case 2:
-              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ProfileScreen()));
-              break;
-          }
-        },
-      ),
+   
     );
   }
 }

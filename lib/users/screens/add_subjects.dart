@@ -29,33 +29,44 @@ class _AddSubjectScreenState extends State<AddSubjectScreen> {
   }
 
   // Fetch departments from the backend
+
   Future<void> _fetchDepartments() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    final instituteId = prefs.getString('institute_id');
-    final String apiUrl = '$baseUrl/api/institutes/$instituteId/departments/';
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  final instituteId = prefs.getString('institute_id');
+  final String apiUrl = '$baseUrl/api/institutes/$instituteId/departments/';
+  print(apiUrl);
 
-    try {
-      final response = await http.get(Uri.parse(apiUrl));
+  try {
+    final response = await http.get(Uri.parse(apiUrl));
+    print(response.body);  
 
-      if (response.statusCode == 200) {
+    if (response.statusCode == 200) {
+      // Check if the response is JSON
+      if (response.headers['content-type']?.contains('application/json') ?? false) {
         final List<dynamic> data = json.decode(response.body);
+        print(data);
         setState(() {
           departments = data.map((dept) => {
             'id': dept['id'].toString(),
-            'name': dept['name']
+            'name': dept['name'],
+            'description': dept['description']  // Add description if needed
           }).toList();
         });
       } else {
-        print('Failed to load departments');
+        print('Response is not JSON: ${response.body}');
       }
-    } catch (e) {
-      print('Error fetching departments: $e');
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
+    } else {
+      print('Failed to load departments. Status code: ${response.statusCode}');
+      print('Response body: ${response.body}');
     }
+  } catch (e) {
+    print('Error fetching departments: $e');
+  } finally {
+    setState(() {
+      _isLoading = false;
+    });
   }
+}
 
   // Fetch subjects from the backend
   Future<void> _fetchSubjects() async {
