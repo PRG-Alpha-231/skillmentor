@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:skillmentor/admin/admin_profile_screen.dart';
+import 'package:skillmentor/admin/list_all_department.dart';
+import 'package:skillmentor/admin/list_all_subject.dart' show SubjectListScreen;
 import 'package:skillmentor/instructor/all_instructores_view.dart';
 import 'package:skillmentor/instructor/instructor_add_student.dart';
 import 'package:skillmentor/instructor/profile_list_screen.dart';
@@ -17,8 +19,8 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   int _currentIndex = 0;
 
   final List<Widget> _screens = [
-    AddDepartments(),
-    AddSubjectScreen(),
+    DepartmentListScreen(),
+    SubjectListScreen(),
     InstructorListScreen(),
     ProfileListScreen(),
     AdminProfileScreen(),
@@ -48,45 +50,6 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
       ),
-    );
-  }
-}
-
-class HomeScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Center(child: Text('Home Screen'));
-  }
-}
-
-
-
-class InstructorsScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Instructors')),
-      body: Center(child: Text('Instructors Screen')),
-    );
-  }
-}
-
-class UsersScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Users')),
-      body: Center(child: Text('Users Screen')),
-    );
-  }
-}
-
-class ProfileScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Profile')),
-      body: Center(child: Text('Profile Screen')),
     );
   }
 }

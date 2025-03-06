@@ -107,7 +107,10 @@ class _AddSubjectScreenState extends State<AddSubjectScreen> {
 
       SharedPreferences prefs = await SharedPreferences.getInstance();
       final instituteId = prefs.getString('institute_id');
-      final String apiUrl = '$baseUrl/api/subjects/';
+      final String apiUrl = '$baseUrl/api/add-subject/';
+
+      print(selectedDepartmentId);
+
 
       Map<String, dynamic> newSubject = {
         "subject_name": _subjectNameController.text.trim(),

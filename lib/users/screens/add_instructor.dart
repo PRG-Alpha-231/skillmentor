@@ -53,11 +53,13 @@ class _AddInstructorScreenState extends State<AddInstructorScreen> {
         _isLoading = true;
       });
 
+      print(_selectedSubject);
+
       final Map<String, dynamic> instructorData = {
         'role': 'Instructor',
         'email': _instructorEmailController.text.trim(),
         'name': _instructorNameController.text.trim(),
-        'subjects': _selectedSubject,
+        'subject': _selectedSubject,
         'qualification': _qualificationController.text.trim(),
       };
 

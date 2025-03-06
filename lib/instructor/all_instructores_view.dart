@@ -25,6 +25,7 @@ class _InstructorListScreenState extends State<InstructorListScreen> {
     });
     try {
       final response = await http.get(Uri.parse('$baseUrl/api/instructors/'));
+      print(response.body); // Debugging
       if (response.statusCode == 200) {
         List<dynamic> data = json.decode(response.body);
         setState(() {
@@ -46,14 +47,14 @@ class _InstructorListScreenState extends State<InstructorListScreen> {
     }
   }
 
-  Future<void> _deleteInstructor(String uuid) async {
-    print(uuid);
+  Future<void> _deleteInstructor(int instructorId) async {
+    print("Deleting Instructor ID: $instructorId"); // Debugging
     setState(() {
       _isLoading = true;
     });
     try {
       final response = await http.delete(
-        Uri.parse('$baseUrl/api/instructors/$uuid/'),
+        Uri.parse('$baseUrl/api/instructors/$instructorId/'),
         headers: {'Content-Type': 'application/json'},
       );
 
@@ -95,10 +96,10 @@ class _InstructorListScreenState extends State<InstructorListScreen> {
                   itemCount: instructors.length,
                   itemBuilder: (context, index) {
                     final instructor = instructors[index];
-                    final profileId = instructor['profile'];
+                    final profile = instructor['profile'];
                     final subject = instructor['subject'];
                     final qualification = instructor['qualification'];
-                    final uuid = instructor['uuid'];
+                    final instructorId = instructor['id']; // Use ID instead of UUID
 
                     return Card(
                       elevation: 4,
@@ -111,24 +112,27 @@ class _InstructorListScreenState extends State<InstructorListScreen> {
                         leading: CircleAvatar(
                           backgroundColor: Colors.deepPurpleAccent,
                           child: Text(
-                            uuid[0].toUpperCase(), // Use UUID initials as fallback
+                            profile['username'] != null && profile['username'].isNotEmpty
+                                ? profile['username'][0].toUpperCase()
+                                : "?", // Show first letter of username
                             style: TextStyle(color: Colors.white),
                           ),
                         ),
                         title: Text(
-                          'Profile ID: $profileId', // Display profile ID
+                          profile['username'] ?? 'No Name', // Display instructor name
                           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Qualification: $qualification'),
-                            Text('Subject: ${subject ?? "Not assigned"}'), // Handle null subject
+                            Text('Email: ${profile['email']}'),
+                            Text('Qualification: ${qualification ?? "Not provided"}'),
+                            Text('Subject: ${subject != null ? subject['subject_name'] : "Not assigned"}'),
                           ],
                         ),
                         trailing: IconButton(
                           icon: Icon(Icons.delete, color: Colors.red),
-                          onPressed: () => _deleteInstructor(uuid), // Pass UUID to delete
+                          onPressed: () => _deleteInstructor(instructorId),
                         ),
                       ),
                     );
@@ -136,7 +140,6 @@ class _InstructorListScreenState extends State<InstructorListScreen> {
                 ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Navigate to Add Instructor Screen
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => AddInstructorScreen()),
