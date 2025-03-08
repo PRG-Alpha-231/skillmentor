@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:skillmentor/instructor/Material/list_material.dart';
 import 'package:skillmentor/users/screens/flashcards_screen.dart';
 import 'package:skillmentor/users/screens/flashcards_screen.dart';
 import 'package:skillmentor/users/screens/materials_screen.dart';
@@ -33,7 +34,7 @@ class InstructorResourceScreen extends StatelessWidget {
               bgColor: Color(0xFFAEDBFF), // Brighter pastel blue
               icon: Icons.book, // Book icon for resources/materials
               onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => InstructorMaterialsScreen()));
+                Navigator.push(context, MaterialPageRoute(builder: (context) => MaterialsListScreen()));
               },
             ),
             SizedBox(height: 16),
