@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:skillmentor/admin/list_all_subject.dart';
 import 'package:skillmentor/instructor/Material/list_material.dart';
+import 'package:skillmentor/instructor/flash_card/list_subject.dart';
 import 'package:skillmentor/users/screens/flashcards_screen.dart';
 import 'package:skillmentor/users/screens/flashcards_screen.dart';
 import 'package:skillmentor/users/screens/materials_screen.dart';
@@ -74,7 +76,7 @@ class InstructorResourceScreen extends StatelessWidget {
               bgColor: Color(0xFFB2E1FF), // Brighter pastel light blue
               icon: Icons.flash_on, // Flash icon for flashcards
               onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => InstructorFlashcardsScreen()));
+                Navigator.push(context, MaterialPageRoute(builder: (context) => InstructorSubjectListScreen()));
               },
             ),
             SizedBox(height: 16),

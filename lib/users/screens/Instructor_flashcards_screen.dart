@@ -1,61 +1,112 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: InstructorFlashcardsScreen(),
-    );
-  }
-}
-
+import 'package:skillmentor/baseurl.dart';
 class InstructorFlashcardsScreen extends StatefulWidget {
+  final String subjectId; // Add subject_id as a parameter
+
+  InstructorFlashcardsScreen({required this.subjectId}); // Constructor
+
   @override
-  _InstructorFlashcardsScreen createState() => _InstructorFlashcardsScreen();
+  _InstructorFlashcardsScreenState createState() => _InstructorFlashcardsScreenState();
 }
 
-class _InstructorFlashcardsScreen extends State<InstructorFlashcardsScreen> {
-  int _currentIndex = 0; // Current index of the flashcard
-  bool _showAnswer = false; // Track if the answer is visible
-  bool _isFlashing = false; // Track flash state
+class _InstructorFlashcardsScreenState extends State<InstructorFlashcardsScreen> {
+  int _currentIndex = 0;
+  bool _showAnswer = false;
+  bool _isFlashing = false;
+  List<Map<String, dynamic>> flashcards = [];
 
-  // List of flashcards
-  final List<Map<String, String>> flashcards = [
-    {"question": "What is Flutter?", "answer": "A UI toolkit for building natively compiled applications."},
-    {"question": "What is Dart?", "answer": "A programming language optimized for building UIs."},
-    {"question": "What is a Widget?", "answer": "The basic building block of a Flutter app."},
-    {"question": "What is State?", "answer": "State is information that can change during the lifetime of the widget."},
-    {"question": "What is Hot Reload?", "answer": "A feature to quickly reload code without restarting the app."},
-    {"question": "What is setState?", "answer": "A method to trigger a rebuild of the widget tree."},
-    {"question": "What is a Scaffold?", "answer": "A layout structure for a Flutter app."},
-    {"question": "What is a MaterialApp?", "answer": "A widget that wraps your app with Material Design."},
-    {"question": "What is an AppBar?", "answer": "A widget that represents a toolbar at the top of the screen."},
-    {"question": "What is a StatelessWidget?", "answer": "A widget that does not hold mutable state."},
-  ];
-
-  // Function to toggle the answer visibility
-  void _toggleAnswer() {
-    setState(() {
-      _isFlashing = true; // Start flash animation
-    });
-
-    Future.delayed(Duration(milliseconds: 200), () {
-      setState(() {
-        _showAnswer = !_showAnswer;
-        _isFlashing = false; // End flash animation
-      });
-    });
+  @override
+  void initState() {
+    super.initState();
+    _fetchFlashcards();
   }
 
-  // Function to change the current card
-  void _onPageChanged(int index) {
-    setState(() {
-      _currentIndex = index;
-      _showAnswer = false; // Reset answer visibility for the new card
-    });
+  // Fetch flashcards for the specific subject
+  Future<void> _fetchFlashcards() async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/api/flashcards/?subject=${widget.subjectId}')); // Filter by subject_id
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        setState(() {
+          flashcards = data.map<Map<String, dynamic>>((item) => {
+            'id': item['id'].toString(),
+            'question': item['question'].toString(),
+            'answer': item['answer'].toString(),
+            'subject_id': item['subject'].toString(), // Include subject_id
+          }).toList();
+        });
+      } else {
+        throw Exception('Failed to load flashcards');
+      }
+    } catch (e) {
+      print('Error fetching flashcards: $e');
+    }
   }
 
-  // Function to show dialog box for adding a new flashcard
+  // Add a new flashcard for the specific subject
+  Future<void> _addFlashcard(String question, String answer) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/flashcards/'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'question': question,
+          'answer': answer,
+          'subject': widget.subjectId, // Use the passed subject_id
+        }),
+      );
+      if (response.statusCode == 201) {
+        await _fetchFlashcards(); // Refresh the list
+      } else {
+        throw Exception('Failed to add flashcard');
+      }
+    } catch (e) {
+      print('Error adding flashcard: $e');
+    }
+  }
+
+  // Update a flashcard
+  Future<void> _updateFlashcard(String id, String question, String answer) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/api/flashcards/$id/'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'question': question,
+          'answer': answer,
+          'subject': widget.subjectId, // Use the passed subject_id
+        }),
+      );
+      if (response.statusCode == 200) {
+        await _fetchFlashcards(); // Refresh the list
+      } else {
+        throw Exception('Failed to update flashcard');
+      }
+    } catch (e) {
+      print('Error updating flashcard: $e');
+    }
+  }
+
+  // Delete a flashcard
+  Future<void> _deleteFlashcard(String id) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/api/flashcards/$id/'),
+      );
+      if (response.statusCode == 204) {
+        await _fetchFlashcards(); // Refresh the list
+      } else {
+        throw Exception('Failed to delete flashcard');
+      }
+    } catch (e) {
+      print('Error deleting flashcard: $e');
+    }
+  }
+
+  // Show dialog to add a new flashcard
   void _showAddFlashcardDialog() {
     TextEditingController questionController = TextEditingController();
     TextEditingController answerController = TextEditingController();
@@ -92,13 +143,67 @@ class _InstructorFlashcardsScreen extends State<InstructorFlashcardsScreen> {
                 String answer = answerController.text.trim();
 
                 if (question.isNotEmpty && answer.isNotEmpty) {
-                  setState(() {
-                    flashcards.add({"question": question, "answer": answer});
-                  });
+                  _addFlashcard(question, answer);
                   Navigator.of(context).pop(); // Close dialog
                 }
               },
               child: Text("Add"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Show dialog to edit a flashcard
+  void _showEditFlashcardDialog(Map<String, dynamic> flashcard) {
+    TextEditingController questionController = TextEditingController(text: flashcard['question']);
+    TextEditingController answerController = TextEditingController(text: flashcard['answer']);
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Edit Flashcard"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: questionController,
+                decoration: InputDecoration(labelText: "Question"),
+              ),
+              SizedBox(height: 8),
+              TextField(
+                controller: answerController,
+                decoration: InputDecoration(labelText: "Answer"),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close dialog
+              },
+              child: Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () {
+                String question = questionController.text.trim();
+                String answer = answerController.text.trim();
+
+                if (question.isNotEmpty && answer.isNotEmpty) {
+                  _updateFlashcard(flashcard['id']!, question, answer);
+                  Navigator.of(context).pop(); // Close dialog
+                }
+              },
+              child: Text("Save"),
+            ),
+            TextButton(
+              onPressed: () {
+                _deleteFlashcard(flashcard['id']!);
+                Navigator.of(context).pop(); // Close dialog
+              },
+              child: Text("Delete", style: TextStyle(color: Colors.red)),
             ),
           ],
         );
@@ -118,12 +223,28 @@ class _InstructorFlashcardsScreen extends State<InstructorFlashcardsScreen> {
         children: [
           Expanded(
             child: PageView.builder(
-              onPageChanged: _onPageChanged,
+              onPageChanged: (index) {
+                setState(() {
+                  _currentIndex = index;
+                  _showAnswer = false; // Reset answer visibility for the new card
+                });
+              },
               itemCount: flashcards.length,
               itemBuilder: (context, index) {
                 final flashcard = flashcards[index];
                 return GestureDetector(
-                  onTap: _toggleAnswer,
+                  onTap: () {
+                    setState(() {
+                      _isFlashing = true; // Start flash animation
+                    });
+
+                    Future.delayed(Duration(milliseconds: 200), () {
+                      setState(() {
+                        _showAnswer = !_showAnswer;
+                        _isFlashing = false; // End flash animation
+                      });
+                    });
+                  },
                   child: AnimatedContainer(
                     duration: Duration(milliseconds: 200),
                     curve: Curves.easeInOut,
@@ -181,13 +302,26 @@ class _InstructorFlashcardsScreen extends State<InstructorFlashcardsScreen> {
           SizedBox(height: 16),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showAddFlashcardDialog,
-        backgroundColor: Colors.purpleAccent,
-        child: Icon(Icons.add, color: Colors.white),
+      floatingActionButton: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          FloatingActionButton(
+            onPressed: _showAddFlashcardDialog,
+            backgroundColor: Colors.purpleAccent,
+            child: Icon(Icons.add, color: Colors.white),
+          ),
+          SizedBox(width: 16),
+          FloatingActionButton(
+            onPressed: () {
+              if (flashcards.isNotEmpty) {
+                _showEditFlashcardDialog(flashcards[_currentIndex]);
+              }
+            },
+            backgroundColor: Colors.purpleAccent,
+            child: Icon(Icons.edit, color: Colors.white),
+          ),
+        ],
       ),
     );
   }
 }
-
-

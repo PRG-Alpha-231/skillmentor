@@ -43,8 +43,7 @@ class _MaterialsListScreenState extends State<MaterialsListScreen> {
     final response = await http.delete(
       Uri.parse('$baseUrl/api/update_materials/?materials_id=$materialId'),
     );
-      print(Uri.parse('$baseUrl/update_materials/?materials_id=$materialId'),);
-
+    print(Uri.parse('$baseUrl/update_materials/?materials_id=$materialId'));
 
     if (response.statusCode == 200) {
       fetchMaterials(); // Refresh the list
@@ -52,7 +51,6 @@ class _MaterialsListScreenState extends State<MaterialsListScreen> {
       throw Exception('Failed to delete material');
     }
   }
-
 
   Future<void> _refreshMaterials() async {
     await fetchMaterials();
@@ -64,17 +62,16 @@ class _MaterialsListScreenState extends State<MaterialsListScreen> {
       appBar: AppBar(
         title: Text('Materials List', style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.blueAccent,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.add, color: Colors.white),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => AddMaterialScreen()),
-              );
-            },
-          ),
-        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => AddMaterialsScreen()),
+          );
+        },
+        child: Icon(Icons.add, color: Colors.white),
+        backgroundColor: Colors.blueAccent, // Match the AppBar color
       ),
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
@@ -145,17 +142,20 @@ class _MaterialsListScreenState extends State<MaterialsListScreen> {
                                     icon: Icon(Icons.edit, color: Colors.blue),
                                     onPressed: () {
                                       print(material);
-                                     Navigator.push(
-  context,
-  MaterialPageRoute(
-    builder: (context) => UpdateMaterialScreen(
-      materialId: material['id'],
-      materialName: material['name'],
-      materialDescription: material['description']??'',
-      materialCategory: material['category'],
-    ),
-  ),
-);
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => UpdateMaterialScreen(
+                                            materialId: material['id'],
+                                            materialName: material['name'],
+                                            materialDescription: material['description'] ?? '',
+                                            materialCategory: material['category'],
+                                          ),
+                                        ),
+                                      ).then((_) {
+                                        fetchMaterials();
+                                        
+                                      });
                                     },
                                   ),
                                   IconButton(

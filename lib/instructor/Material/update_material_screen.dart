@@ -1,6 +1,7 @@
-import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:file_picker/file_picker.dart';
 import 'package:skillmentor/baseurl.dart';
 
 class UpdateMaterialScreen extends StatefulWidget {
@@ -25,7 +26,7 @@ class _UpdateMaterialScreenState extends State<UpdateMaterialScreen> {
   late final TextEditingController _nameController;
   late final TextEditingController _descriptionController;
   late final TextEditingController _categoryController;
-  String? _filePath;
+  File? _file;
   bool _isLoading = false;
 
   @override
@@ -47,7 +48,16 @@ class _UpdateMaterialScreenState extends State<UpdateMaterialScreen> {
   }
 
   Future<void> _pickFile() async {
-    // Implement file picker logic here
+    FilePickerResult? result = await FilePicker.platform.pickFiles();
+    if (result != null) {
+      setState(() {
+        _file = File(result.files.single.path!);
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No file selected')),
+      );
+    }
   }
 
   Future<void> _submitForm() async {
@@ -58,13 +68,17 @@ class _UpdateMaterialScreenState extends State<UpdateMaterialScreen> {
       try {
         final request = http.MultipartRequest(
           'POST',
-          Uri.parse('$baseUrl/update_materials/?materials_id=${widget.materialId}'),
+          Uri.parse('$baseUrl/api/update_materials/?materials_id=${widget.materialId}'),
         );
         request.fields['name'] = _nameController.text;
         request.fields['description'] = _descriptionController.text;
         request.fields['category'] = _categoryController.text;
-        if (_filePath != null) {
-          request.files.add(await http.MultipartFile.fromPath('file', _filePath!));
+
+        // Add file if selected
+        if (_file != null) {
+          request.files.add(
+            await http.MultipartFile.fromPath('file', _file!.path),
+          );
         }
 
         final response = await request.send();
@@ -74,7 +88,7 @@ class _UpdateMaterialScreenState extends State<UpdateMaterialScreen> {
           );
           Navigator.pop(context); // Return to the previous screen
         } else {
-          throw Exception('Failed to update material');
+          throw Exception('Failed to update material. Status code: ${response.statusCode}');
         }
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -144,15 +158,33 @@ class _UpdateMaterialScreenState extends State<UpdateMaterialScreen> {
                       },
                     ),
                     SizedBox(height: 20),
-                    ElevatedButton.icon(
-                      onPressed: _pickFile,
-                      icon: Icon(Icons.upload_file),
-                      label: Text('Upload File'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blueAccent,
-                        padding: EdgeInsets.symmetric(vertical: 12),
-                      ),
-                    ),
+                    _file == null
+                        ? ElevatedButton.icon(
+                            onPressed: _pickFile,
+                            icon: Icon(Icons.upload_file),
+                            label: Text('Upload File'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blueAccent,
+                              padding: EdgeInsets.symmetric(vertical: 12),
+                            ),
+                          )
+                        : Column(
+                            children: [
+                              ListTile(
+                                leading: Icon(Icons.file_present, color: Colors.blueAccent),
+                                title: Text('file'),
+                                trailing: IconButton(
+                                  icon: Icon(Icons.delete, color: Colors.red),
+                                  onPressed: () {
+                                    setState(() {
+                                      _file = null;
+                                    });
+                                  },
+                                ),
+                              ),
+                              SizedBox(height: 10),
+                            ],
+                          ),
                     SizedBox(height: 20),
                     Center(
                       child: ElevatedButton.icon(
