@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:skillmentor/student/student_profile_screen.dart';
+import 'package:skillmentor/student/view_materials.dart';
+import 'package:skillmentor/student/view_sub_list_flash_card.dart';
+import 'package:skillmentor/student/view_subujcet_list_question_paper.dart';
 import 'package:skillmentor/users/screens/flashcards_screen.dart';
 import 'package:skillmentor/users/screens/materials_screen.dart';
 import 'package:skillmentor/users/screens/pdf_analyzer.dart';
@@ -31,7 +35,7 @@ class ResourcesScreen extends StatelessWidget {
                   bgColor: Color(0xFFAEDBFF), // Brighter pastel blue
                   icon: Icons.book, // Book icon for resources/materials
                   onTap: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => MaterialsScreen()));
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => UserMaterialScreen()));
                   },
                 ),
                 SizedBox(height: 16),
@@ -71,7 +75,7 @@ class ResourcesScreen extends StatelessWidget {
                   bgColor: Color(0xFFB2E1FF), // Brighter pastel light blue
                   icon: Icons.flash_on, // Flash icon for flashcards
                   onTap: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => FlashCardScreen()));
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => SfSubjectListScreen()));
                   },
                 ),
                 SizedBox(height: 16),
@@ -81,7 +85,7 @@ class ResourcesScreen extends StatelessWidget {
                   bgColor: Color(0xFFF1D1F7), // Brighter pastel purple
                   icon: Icons.description, // File icon for question papers
                   onTap: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => QuestionpapersScreen()));
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => QSubjectListScreen()));
                   },
                 ),
                 SizedBox(height: 16),
@@ -128,7 +132,7 @@ class ResourcesScreen extends StatelessWidget {
             // Already on ResourcesScreen, no action needed
               break;
             case 2:
-              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ProfileScreen()));
+              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => SProfileScreen()));
               break;
           }
         },

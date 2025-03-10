@@ -83,6 +83,7 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+        print(data);
 
         SharedPreferences prefs = await SharedPreferences.getInstance();
         await prefs.setString("access_token", data["access"]);
@@ -99,7 +100,12 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
          
          Navigator.pushAndRemoveUntil(context,MaterialPageRoute(builder: (context) =>  InstructorHomeScreen(),) , (route) => false,);
         } else {
-          Navigator.pushReplacementNamed(context, "/userHome");
+                  await prefs.setString("student_id", data["student_id"].toString());
+
+          print(data);
+
+              Navigator.pushAndRemoveUntil(context,MaterialPageRoute(builder: (context) =>  UserHome(),) , (route) => false,);
+
         }
       } else {
         final errorData = jsonDecode(response.body);
@@ -161,13 +167,13 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
               ),
               SizedBox(height: screenHeight * .03),
 
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () => Navigator.pushNamed(context, "/forgotPassword"),
-                  child: const Text('Forgot Password?', style: TextStyle(color: Colors.black)),
-                ),
-              ),
+              // Align(
+              //   alignment: Alignment.centerRight,
+              //   child: TextButton(
+              //     onPressed: () => Navigator.pushNamed(context, "/forgotPassword"),
+              //     child: const Text('Forgot Password?', style: TextStyle(color: Colors.black)),
+              //   ),
+              // ),
 
               isLoading
                   ? const CircularProgressIndicator()

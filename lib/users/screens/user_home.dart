@@ -1,17 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:skillmentor/users/screens/profile_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:skillmentor/student/student_profile_screen.dart';
+import 'dart:convert';
+
 import 'package:skillmentor/users/screens/resource_screen.dart';
-import 'package:skillmentor/users/screens/last_opened_screen.dart';
-
-import 'admin.dart';
-import 'instructor_home_screen.dart'; // Corrected import for LastOpenedScreen
-
-// Extension for DateTime comparison
-extension DateTimeComparison on DateTime {
-  bool isSameDayAs(DateTime other) {
-    return this.year == other.year && this.month == other.month && this.day == other.day;
-  }
-}
 
 class UserHome extends StatefulWidget {
   @override
@@ -19,319 +11,157 @@ class UserHome extends StatefulWidget {
 }
 
 class _UserHomeState extends State<UserHome> {
-  DateTime _selectedDate = DateTime.now();
-  Set<DateTime> _usedDates = {
-    DateTime.now().subtract(Duration(days: 1)),
-    DateTime.now().subtract(Duration(days: 2)),
-    DateTime.now().add(Duration(days: 1)),
-  };
-
-  // Example progress for individual modules
-  List<double> _moduleProgressList = [0.5, 0.7, 0.4, 0.6, 0.9]; // Progress for each module
-
-  // To-Do List
   TextEditingController _taskController = TextEditingController();
-  List<String> _tasks = [];
-  List<bool> _taskCompletion = [];
+  List<Map<String, dynamic>> _tasks = []; // Each task has a 'text' and 'isCompleted' field
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTasks();
+  }
+
+  // Load tasks from SharedPreferences
+  Future<void> _loadTasks() async {
+    final prefs = await SharedPreferences.getInstance();
+    final tasksJson = prefs.getString('tasks');
+    if (tasksJson != null) {
+      setState(() {
+        _tasks = List<Map<String, dynamic>>.from(json.decode(tasksJson));
+      });
+    }
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
+  // Save tasks to SharedPreferences
+  Future<void> _saveTasks() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('tasks', json.encode(_tasks));
+  }
+
+  // Add a new task
+  void _addTask() {
+    if (_taskController.text.isNotEmpty) {
+      setState(() {
+        _tasks.add({'text': _taskController.text, 'isCompleted': false});
+        _taskController.clear();
+        _saveTasks();
+      });
+    }
+  }
+
+  // Toggle task completion status
+  void _toggleTaskCompletion(int index) {
+    setState(() {
+      _tasks[index]['isCompleted'] = !_tasks[index]['isCompleted'];
+      _saveTasks();
+    });
+  }
+
+  // Delete a task
+  void _deleteTask(int index) {
+    setState(() {
+      _tasks.removeAt(index);
+      _saveTasks();
+    });
+  }
+
+  // Reorder tasks
+  void _onReorder(int oldIndex, int newIndex) {
+    setState(() {
+      if (newIndex > oldIndex) {
+        newIndex -= 1;
+      }
+      final task = _tasks.removeAt(oldIndex);
+      _tasks.insert(newIndex, task);
+      _saveTasks();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Calculate overall progress as the average of all module progress
-    double _overallProgress = _moduleProgressList.reduce((a, b) => a + b) / _moduleProgressList.length;
-
     return Scaffold(
       appBar: AppBar(
-        title: Text('Home'),
+        title: Text('To-Do List'),
         centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-
-              Divider(height: 20, color: Colors.grey, thickness: 1), // Divider
-
-              // Overall Progress Bar
-              Container(
-                margin: EdgeInsets.symmetric(vertical: 8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Overall Progress",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontFamily: 'Poppins',
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  // Input field for adding tasks
+                  TextField(
+                    controller: _taskController,
+                    decoration: InputDecoration(
+                      labelText: 'Add a new task',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: LinearProgressIndicator(
-                              value: _overallProgress,
-                              backgroundColor: Color(0xFFE1E1E1),
-                              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFAD2C9)),
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(left: 8),
-                            child: Text(
-                              "${(_overallProgress * 100).toStringAsFixed(1)}%",
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                color: _overallProgress == 1.0 ? Colors.white : Colors.black,
-                              ),
-                            ),
-                          ),
-                        ],
+                      suffixIcon: IconButton(
+                        icon: Icon(Icons.add, color: Colors.blue),
+                        onPressed: _addTask,
                       ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Module Progress Section with Dropdown
-              Container(
-                margin: EdgeInsets.symmetric(vertical: 8),
-                child: ExpansionTile(
-                  title: Text(
-                    "Module Progress",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
                     ),
                   ),
-                  children: List.generate(_moduleProgressList.length, (index) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text("Module ${index + 1}", style: TextStyle(fontSize: 16)),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                child: LinearProgressIndicator(
-                                  value: _moduleProgressList[index],
-                                  backgroundColor: Color(0xFFE1E1E1),
-                                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFAD2C9)),
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.only(left: 8),
-                                child: Text(
-                                  "${(_moduleProgressList[index] * 100).toStringAsFixed(1)}%",
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                    color: _moduleProgressList[index] == 1.0
-                                        ? Colors.white
-                                        : Colors.black,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    );
-                  }),
-                ),
-              ),
-
-              Divider(height: 20, color: Colors.grey, thickness: 1), // Divider
-
-              // To-Do List
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "To-Do List",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontFamily: 'Poppins',
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                    ),
-                    TextField(
-                      controller: _taskController,
-                      decoration: InputDecoration(
-                        labelText: 'Add a new task',
-                        suffixIcon: IconButton(
-                          icon: Icon(Icons.add),
-                          onPressed: _addTask,
-                        ),
-                      ),
-                    ),
-                    ReorderableListView(
-                      shrinkWrap: true,
-                      physics: NeverScrollableScrollPhysics(),
+                  SizedBox(height: 20),
+                  // List of tasks
+                  Expanded(
+                    child: ReorderableListView(
                       onReorder: _onReorder,
-                      children: List.generate(_tasks.length, (index) {
-                        return ListTile(
-                          key: ValueKey(index),
-                          leading: ReorderableDragStartListener(
-                            index: index,
-                            child: Icon(Icons.drag_handle),
+                      children: _tasks.map((task) {
+                        final index = _tasks.indexOf(task);
+                        return Card(
+                          key: ValueKey(task),
+                          margin: EdgeInsets.symmetric(vertical: 5),
+                          elevation: 2,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
                           ),
-                          title: Text(
-                            _tasks[index],
-                            style: TextStyle(
-                              decoration: _taskCompletion[index]
-                                  ? TextDecoration.lineThrough
-                                  : TextDecoration.none,
+                          child: ListTile(
+                            leading: ReorderableDragStartListener(
+                              index: index,
+                              child: Icon(Icons.drag_handle, color: Colors.grey),
+                            ),
+                            title: Text(
+                              task['text'],
+                              style: TextStyle(
+                                decoration: task['isCompleted']
+                                    ? TextDecoration.lineThrough
+                                    : TextDecoration.none,
+                                color: task['isCompleted'] ? Colors.grey : Colors.black,
+                              ),
+                            ),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: Icon(
+                                    task['isCompleted'] ? Icons.check_circle : Icons.circle_outlined,
+                                    color: task['isCompleted'] ? Colors.green : Colors.grey,
+                                  ),
+                                  onPressed: () => _toggleTaskCompletion(index),
+                                ),
+                                IconButton(
+                                  icon: Icon(Icons.delete, color: Colors.red),
+                                  onPressed: () => _deleteTask(index),
+                                ),
+                              ],
                             ),
                           ),
-                          trailing: IconButton(
-                            icon: Icon(Icons.delete),
-                            onPressed: () => _deleteTask(index),
-                          ),
-                          onTap: () {
-                            setState(() {
-                              _taskCompletion[index] = !_taskCompletion[index];
-                            });
-                          },
                         );
-                      }),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Last Opened Card (Fixed layout issue)
-              SizedBox(
-                width: double.infinity, // Makes sure the GestureDetector takes the full width
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => LastOpenedScreen()), // Navigate to LastOpenedScreen
-                    );
-                  },
-                  child: Card(
-                    margin: EdgeInsets.symmetric(vertical: 8),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    elevation: 4,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Row(
-                        children: [
-                          Icon(Icons.history, size: 24),
-                          SizedBox(width: 16),
-                          Text(
-                            "Last Opened",
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
+                      }).toList(),
                     ),
                   ),
-                ),
+                ],
               ),
-              SizedBox(
-                width: double.infinity, // Makes sure the GestureDetector takes the full width
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => InstructorHomeScreen()), // Navigate to instructor Home
-                    );
-                  },
-                  child: Card(
-                    margin: EdgeInsets.symmetric(vertical: 8),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    elevation: 4,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Row(
-                        children: [
-                          Icon(Icons.history, size: 24),
-                          SizedBox(width: 16),
-                          Text(
-                            "Instructor  Home",
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-
-      // Position the Elevated Button in the Bottom Right corner using a Stack
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.all(12.0), // Adjusted padding for a sleeker look
-        child: Align(
-          alignment: Alignment.bottomRight,
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              iconColor: Colors.lightBlue, // Light blue color
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12), // More angular for a squarish look
-              ),
-              padding: EdgeInsets.symmetric(vertical: 16, horizontal: 18), // Increased padding for a bigger button
-              elevation: 6, // Slightly increased elevation
             ),
-            onPressed: () {
-              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => AdminApp())); // Action to perform when button is pressed
-              print('Button pressed');
-            },
-            child: Stack(
-              alignment: Alignment.bottomRight,
-              children: [
-                Icon(
-                  Icons.check, // Change this to your desired icon
-                  size: 24, // Slightly larger icon size
-                  color: Colors.white,
-                ),
-                Positioned(
-                  bottom: 0,
-                  right: 0,
-                  child: CircleAvatar(
-                    radius: 10, // Smaller alert icon
-                    backgroundColor: Colors.red, // Alert icon color
-                    child: Icon(
-                      Icons.warning, // Alert symbol (!)
-                      size: 14, // Smaller alert symbol
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
 
-      bottomNavigationBar: BottomNavigationBar(
+
+ bottomNavigationBar: BottomNavigationBar(
         currentIndex: 0,
         onTap: (index) {
           switch (index) {
@@ -342,7 +172,7 @@ class _UserHomeState extends State<UserHome> {
               Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ResourcesScreen()));
               break;
             case 2:
-              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ProfileScreen()));
+              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => SProfileScreen()));
               break;
           }
         },
@@ -363,53 +193,7 @@ class _UserHomeState extends State<UserHome> {
       ),
     );
   }
-
-  // Format date in 'dd MMM yyyy' format
-  String _formatDate(DateTime date) {
-    return "${date.day} ${_getMonthName(date.month)} ${date.year}";
-  }
-
-  // Get day of the week (e.g., Monday, Tuesday, etc.)
-  String _getDayOfWeek(DateTime date) {
-    return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][date.weekday - 1];
-  }
-
-  // Get month name (e.g., January, February, etc.)
-  String _getMonthName(int month) {
-    return [
-      "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-    ][month - 1];
-  }
-
-  // Add task to the to-do list
-  void _addTask() {
-    if (_taskController.text.isNotEmpty) {
-      setState(() {
-        _tasks.add(_taskController.text);
-        _taskCompletion.add(false);
-        _taskController.clear();
-      });
-    }
-  }
-
-  // Reorder tasks
-  void _onReorder(int oldIndex, int newIndex) {
-    setState(() {
-      if (newIndex > oldIndex) {
-        newIndex -= 1;
-      }
-      final task = _tasks.removeAt(oldIndex);
-      _tasks.insert(newIndex, task);
-      final completionStatus = _taskCompletion.removeAt(oldIndex);
-      _taskCompletion.insert(newIndex, completionStatus);
-    });
-  }
-
-  // Delete task from to-do list
-  void _deleteTask(int index) {
-    setState(() {
-      _tasks.removeAt(index);
-      _taskCompletion.removeAt(index);
-    });
-  }
 }
+
+
+

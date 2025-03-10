@@ -1,21 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:skillmentor/admin/list_all_subject.dart';
 import 'package:skillmentor/instructor/Material/list_material.dart';
 import 'package:skillmentor/instructor/flash_card/list_subject.dart';
-import 'package:skillmentor/users/screens/flashcards_screen.dart';
-import 'package:skillmentor/users/screens/flashcards_screen.dart';
-import 'package:skillmentor/users/screens/materials_screen.dart';
-import 'package:skillmentor/users/screens/profile_screen.dart';
-import 'package:skillmentor/users/screens/questionpapers_screen.dart';
-import 'package:skillmentor/users/screens/questionpapers_screen.dart';
+import 'package:skillmentor/instructor/quizz/add_quizz_screen.dart';
+import 'package:skillmentor/instructor/qustion_paper/qustion_paper_list_sub.dart';
 import 'package:skillmentor/users/screens/quicknotes_screen.dart';
-import 'package:skillmentor/users/screens/quizzes_screen.dart';
-import 'package:skillmentor/users/screens/user_home.dart';
 import 'package:skillmentor/users/screens/whiteboard_screen.dart';
 
-import 'Instructor_flashcards_screen.dart';
-import 'instructor_materials_screen.dart';
-import 'instructor_questionpapers_screen.dart';
 import 'instructor_quizzes_screen.dart';
 
 class InstructorResourceScreen extends StatelessWidget {
@@ -66,7 +56,7 @@ class InstructorResourceScreen extends StatelessWidget {
               bgColor: Color(0xFFFFC4C4), // Brighter pastel red
               icon: Icons.quiz, // Quiz icon for quizzes
               onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => InstructorQuizzesScreen()));
+                Navigator.push(context, MaterialPageRoute(builder: (context) => AddQuizScreen()));
               },
             ),
             SizedBox(height: 16),
@@ -86,7 +76,7 @@ class InstructorResourceScreen extends StatelessWidget {
               bgColor: Color(0xFFF1D1F7), // Brighter pastel purple
               icon: Icons.description, // File icon for question papers
               onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => InstructorQuestionpapersScreen()));
+                Navigator.push(context, MaterialPageRoute(builder: (context) => InstructorQSubjectListScreen()));
               },
             ),
           ],

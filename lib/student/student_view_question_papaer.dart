@@ -6,18 +6,18 @@ import 'package:http/http.dart' as http;
 import 'package:skillmentor/baseurl.dart';
 import 'package:url_launcher/url_launcher.dart'; // Import url_launcher
 
-class InstructorQuestionpapersScreen extends StatefulWidget {
+class StudentQuestionpapersScreen extends StatefulWidget {
   final int subjectId; // Accept subject_id from another page
 
-  InstructorQuestionpapersScreen({required this.subjectId});
+  StudentQuestionpapersScreen({required this.subjectId});
 
   @override
-  _InstructorQuestionpapersScreenState createState() =>
-      _InstructorQuestionpapersScreenState();
+  _StudentQuestionpapersScreenState createState() =>
+      _StudentQuestionpapersScreenState();
 }
 
-class _InstructorQuestionpapersScreenState
-    extends State<InstructorQuestionpapersScreen> {
+class _StudentQuestionpapersScreenState
+    extends State<StudentQuestionpapersScreen> {
   List<Map<String, String>> questionPapers = [];
   String _sortBy = 'Title';
   bool _isLoading = false; // For loading indicator
@@ -43,7 +43,7 @@ class _InstructorQuestionpapersScreenState
             'id': item['id'].toString(),
             'title': item['title'].toString(),
             'year': item['year'].toString(),
-            'url': '$baseUrl${item['file']}', // Prepend the base URL
+            'url': '$baseUrl/api${item['file']}', // Prepend the base URL
           }).toList();
           print(questionPapers);
         });
@@ -239,12 +239,7 @@ class _InstructorQuestionpapersScreenState
             ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _pickAndUploadFile,
-        child: Icon(Icons.add),
-        backgroundColor: Colors.blueGrey[600],
-        tooltip: 'Add New Question Paper',
-      ),
+     
     );
   }
 }
@@ -286,10 +281,7 @@ class QuestionPaperCard extends StatelessWidget {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            IconButton(
-              icon: Icon(Icons.delete, color: Colors.red),
-              onPressed: onDelete,
-            ),
+            
             IconButton(
               icon: Icon(Icons.picture_as_pdf, color: Colors.blue),
               onPressed: () => {
