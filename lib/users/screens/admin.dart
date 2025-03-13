@@ -50,12 +50,10 @@ class _LoginPageState extends State<LoginPage> {
 
   // Validation for email
   String? validateEmail(String? email) {
-    if (email == null || email.isEmpty) {
-      return 'Email is required';
-    }
+   
     String pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$';
     RegExp regExp = RegExp(pattern);
-    if (!regExp.hasMatch(email)) {
+    if (!regExp.hasMatch(email!)) {
       return 'Enter a valid email';
     }
     return null;
@@ -63,10 +61,8 @@ class _LoginPageState extends State<LoginPage> {
 
   // Validation for password
   String? validatePassword(String? password) {
-    if (password == null || password.isEmpty) {
-      return 'Password is required';
-    }
-    if (password.length < 6) {
+  
+    if (password!.length < 6) {
       return 'Password must be at least 6 characters';
     }
     return null;
