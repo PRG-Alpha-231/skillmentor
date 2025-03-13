@@ -136,8 +136,8 @@ class _ProfileListScreenState extends State<ProfileListScreen> {
 Widget build(BuildContext context) {
   return Scaffold(
     appBar: AppBar(
-      title: Text('Profiles with Role "User"'),
-      backgroundColor: Colors.blueAccent,
+      title: Text('Users'),
+      backgroundColor: Colors.deepPurple,
       elevation: 0,
       actions: [
         IconButton(
@@ -224,7 +224,7 @@ Widget build(BuildContext context) {
     floatingActionButton: FloatingActionButton(
       onPressed: () => _navigateToAddProfileScreen(context),
       child: Icon(Icons.add, color: Colors.white),
-      backgroundColor: Colors.blueAccent,
+      backgroundColor: Colors.deepPurple,
     ),
   );
 }
