@@ -35,6 +35,9 @@ class _SubjectListScreenState extends State<SubjectListScreen> {
         headers: {'Content-Type': 'application/json'},
       );
 
+
+      print(Uri.parse('$baseUrl/api/subjects/'),);
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {
@@ -60,8 +63,7 @@ class _SubjectListScreenState extends State<SubjectListScreen> {
     print(instituteId);
 
     if (instituteId != null) {
-      // Filter subjects by institute_id
-      print(allSubjects);
+     
       setState(() {
         filteredSubjects = allSubjects.where((subject) {
           final department = subject['department'];

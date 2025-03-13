@@ -257,12 +257,14 @@ class _SignUpPageState extends State<SignUpPage> {
       print(response.statusCode);
 
       if (response.statusCode == 200) {
-        await addInstitute();
+        
         final responseData = jsonDecode(response.body);
         print(responseData);
 
         SharedPreferences prefs = await SharedPreferences.getInstance();
         await prefs.setString("admin_id", responseData['admin']['id'].toString());
+
+        await addInstitute();
 
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(responseData['msg'])));
 
