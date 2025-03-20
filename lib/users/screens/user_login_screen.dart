@@ -18,12 +18,11 @@ class UserLoginScreen extends StatefulWidget {
   @override
   _UserLoginScreenState createState() => _UserLoginScreenState();
 }
-
 class _UserLoginScreenState extends State<UserLoginScreen> {
   late String email, password;
   String? emailError, passwordError;
   bool showPassword = false;
-  bool isLoading = false; // To show a loading indicator
+  bool isLoading = false;
 
   @override
   void initState() {
@@ -68,19 +67,17 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
     setState(() {
       isLoading = true;
     });
-    
 
     const String apiUrl = "$baseUrl/api/login"; // Replace with your actual API URL
     print(apiUrl);
 
     try {
-      
       final response = await http.post(
         Uri.parse(apiUrl),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({
-          "email": email,
-          "password": password,
+          "email": email.trim(),
+          "password": password.trim(),
         }),
       );
       print(response.body);
@@ -99,17 +96,20 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
           Navigator.pushReplacementNamed(context, "/adminHome");
         } else if (data["role"] == "Instructor") {
           print('lllll');
-        await prefs.setString("instructor_id", data["instructor_id"].toString());
-
-         
-         Navigator.pushAndRemoveUntil(context,MaterialPageRoute(builder: (context) =>  InstructorHomeScreen(),) , (route) => false,);
+          await prefs.setString("instructor_id", data["instructor_id"].toString());
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => InstructorHomeScreen()),
+            (route) => false,
+          );
         } else {
-                  await prefs.setString("student_id", data["student_id"].toString());
-
+          await prefs.setString("student_id", data["student_id"].toString());
           print(data);
-
-              Navigator.pushAndRemoveUntil(context,MaterialPageRoute(builder: (context) =>  UserHome(),) , (route) => false,);
-
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => UserHome()),
+            (route) => false,
+          );
         }
       } else {
         final errorData = jsonDecode(response.body);
@@ -165,19 +165,15 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
                 errorText: passwordError,
                 obscureText: !showPassword,
                 onChanged: (value) => setState(() => password = value),
-                onSubmitted: (_) => login(),
+              
                 textInputAction: TextInputAction.done,
-
+                onTogglePasswordVisibility: () {
+                  setState(() {
+                    showPassword = !showPassword;
+                  });
+                },
               ),
               SizedBox(height: screenHeight * .03),
-
-              // Align(
-              //   alignment: Alignment.centerRight,
-              //   child: TextButton(
-              //     onPressed: () => Navigator.pushNamed(context, "/forgotPassword"),
-              //     child: const Text('Forgot Password?', style: TextStyle(color: Colors.black)),
-              //   ),
-              // ),
 
               isLoading
                   ? const CircularProgressIndicator()
@@ -185,7 +181,7 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
               SizedBox(height: screenHeight * .15),
 
               TextButton(
-                onPressed: () =>     Navigator.push(
+                onPressed: () => Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => AdminApp()),
                 ),
@@ -210,3 +206,55 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
   }
 }
 
+
+
+
+class InputField extends StatelessWidget {
+  final String labelText;
+  final String? errorText;
+  final bool obscureText;
+  final Function(String) onChanged;
+  final TextInputType? keyboardType;
+  final TextInputAction? textInputAction;
+  final bool autoFocus;
+  final VoidCallback? onTogglePasswordVisibility;
+
+  const InputField({
+    Key? key,
+    required this.labelText,
+    this.errorText,
+    this.obscureText = false,
+    required this.onChanged,
+    this.keyboardType,
+    this.textInputAction,
+    this.autoFocus = false,
+    this.onTogglePasswordVisibility,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      obscureText: obscureText,
+      onChanged: onChanged,
+      keyboardType: keyboardType,
+      textInputAction: textInputAction,
+      autofocus: autoFocus,
+      decoration: InputDecoration(
+        labelText: labelText,
+        errorText: errorText,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        suffixIcon: onTogglePasswordVisibility != null
+            ? IconButton(
+                icon: Icon(
+                  obscureText ? Icons.visibility : Icons.visibility_off,
+                  color: Colors.grey,
+                ),
+                onPressed: onTogglePasswordVisibility,
+              )
+            : null,
+      ),
+    );
+  }
+}
