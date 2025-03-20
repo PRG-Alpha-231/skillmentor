@@ -166,12 +166,7 @@ class _AddQuizScreenState extends State<AddQuizScreen> {
                 }).toList(),
                 SizedBox(height: 20),
 
-                // Add Question Button
-                ElevatedButton(
-                  onPressed: _addQuestion,
-                  child: Text('Add Question'),
-                ),
-                SizedBox(height: 20),
+              
 
                 // Display Added Questions
                 if (questions.isNotEmpty)
