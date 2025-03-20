@@ -7,14 +7,6 @@ import 'package:flutter/rendering.dart';
 
 
 
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: WhiteboardScreen(),
-    );
-  }
-}
 
 class WhiteboardScreen extends StatefulWidget {
   @override
