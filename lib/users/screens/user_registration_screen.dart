@@ -1,19 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:skillmentor/users/screens/user_login_screen.dart';
 
-void main() {
-  runApp(UserRegistrationApp());
-}
 
-class UserRegistrationApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: UserRegistrationScreen(),
-    );
-  }
-}
 
 class UserRegistrationScreen extends StatelessWidget {
   @override

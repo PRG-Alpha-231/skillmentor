@@ -183,7 +183,7 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
               TextButton(
                 onPressed: () => Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => AdminApp()),
+                  MaterialPageRoute(builder: (context) => LoginPage()),
                 ),
                 child: RichText(
                   text: const TextSpan(

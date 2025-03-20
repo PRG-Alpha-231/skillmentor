@@ -14,26 +14,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 
 
-class AdminApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.deepPurple,
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12.0),
-            borderSide: BorderSide.none,
-          ),
-        ),
-      ),
-      home: LoginPage(),
-    );
-  }
-}
 
 // ------------------------------ LOGIN PAGE ------------------------------
 class LoginPage extends StatefulWidget {
